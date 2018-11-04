@@ -29,7 +29,6 @@ app.put('/:user', (req,res) => {
     }
 });
 
-//TODO: delete logic
 app.delete('/:user', (req,res) => {
     if(fs.existsSync(path.join(__dirname+"/../out/"+req.params.user))) {
         fs.readdirSync(path.join(__dirname+"/../out/"+req.params.user+"/friends/")).forEach((file) => {
@@ -119,6 +118,28 @@ app.get('/request/confirm/:to/:from', (req, res) => {
     } else {
         console.log(req.params.from+" please don't!");
         res.send(req.params.from+" please don't!\n");
+        res.status(403);
+    }
+});
+
+app.get('/list/request/:user', (req,res) => {
+    if(fs.existsSync(path.join(__dirname+"/../out/"+req.params.user))) {
+        var request = [];
+        fs.readdirSync(path.join(__dirname+"/../out/"+req.params.user+"/request")).forEach((file) => {
+            request.push(file);
+        });
+        if(request.length > 0) {
+            console.log("Pending friend request: "+request);
+            res.send("Pending friend request: "+request+"\n");
+            res.status(200);
+        } else {
+            console.log("No pending friend request");
+            res.send("No pending friend request\n");
+            res.status(404);
+        }
+    } else {
+        console.log(req.params.user+" please don't!");
+        res.send(req.params.user+" please don't!\n");
         res.status(403);
     }
 });
