@@ -1,6 +1,7 @@
 var express = require('express');
 var helmet = require('helmet');
 var bodyParser = require('body-parser');
+var publicIp = require('public-ip');
 
 var app = express();
 app.use(helmet());
@@ -31,4 +32,8 @@ app.get('/request/confirm/:to/:from', (req, res) => {
     res.status(200);
 });
 
-app.listen(8080);
+app.listen(8080,() => {
+    publicIp.v4().then(ip => {
+        console.log("Public ipv4: "+ip);
+    });
+});
