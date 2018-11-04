@@ -18,7 +18,6 @@ app.put('/:user', (req,res) => {
         fs.mkdirSync(path.join(__dirname+"/../out/"+req.params.user+"/friends"));
         fs.mkdirSync(path.join(__dirname+"/../out/"+req.params.user+"/photos"));
         fs.mkdirSync(path.join(__dirname+"/../out/"+req.params.user+"/request"));
-        fs.mkdirSync(path.join(__dirname+"/../out/"+req.params.user+"/shared"));
         console.log("Welcome to selfie-share "+req.params.user);
         res.send("Welcome to selfie-share "+req.params.user+"\n");
         res.status(200);
