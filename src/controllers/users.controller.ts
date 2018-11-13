@@ -1,6 +1,6 @@
 
 // Import only what we need from express
-import { User } from '../model';
+import { User, UserCreateRequest } from '../model';
 import { Route, Get, Post, Body, Query, SuccessResponse, Response, Controller } from 'tsoa';
 import * as express from 'express';
 
@@ -41,7 +41,7 @@ export class UserController extends Controller {
     @Response('400', 'If any required fields are missing in the request')
     @SuccessResponse('201', 'Created')
     @Post()
-    public createUser(@Body() requestBody: User): string {
+    public createUser(@Body() requestBody: UserCreateRequest): string {
         console.log("Creating user", requestBody);
         this.setStatus(201);
         return "1";

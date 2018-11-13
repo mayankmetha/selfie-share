@@ -13,3 +13,8 @@ export class User {
         this.numberOfFriends = 0;
     }
 }
+
+export interface UserCreateRequest {
+    userName: string;
+    email: string;
+}
