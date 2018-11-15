@@ -22,8 +22,15 @@ Uses mocha and chai for tests. Put all test files under the 'test' folder. Examp
 Running Tests <br>
 Start the server using `npm start`<br>
 In a different window, run `npm run test`
+<br>
+Known Issues:<br>
+Building sometimes fails with seg fault. Ignore for now. <br>
+Make sure to setup mysql locally. 
+`sudo apt install mysql`<br>
+
+Check dbcommands.txt for setting up the DB for the first time.<br>
 
 References used:<br>
-https://dev.to/briandgls/using-typescript-with-express--e0k
-https://www.rajram.net/node-101-part-4-auto-generate-and-register-routes-in-node-for-web-apis-2/
-https://www.rajram.net/node-101-part-5-auto-generate-swagger-for-your-web-api-and-use-swaggerui-to-try-it-out/
+https://dev.to/briandgls/using-typescript-with-express--e0k<br>
+https://www.rajram.net/node-101-part-4-auto-generate-and-register-routes-in-node-for-web-apis-2/<br>
+https://www.rajram.net/node-101-part-5-auto-generate-swagger-for-your-web-api-and-use-swaggerui-to-try-it-out/<br>

@@ -1,8 +1,8 @@
 
 // Import only what we need from express
-import { User, UserCreateRequest } from '../model';
-import { Route, Get, Post, Body, Query, SuccessResponse, Response, Controller } from 'tsoa';
-import * as express from 'express';
+import { User, UserDetails } from '../model';
+import { Route, Get, Post, Body, Query, SuccessResponse, Response, Controller, Delete } from 'tsoa';
+import { UserManager } from '../service';
 
 @Route('users')
 export class UserController extends Controller {
@@ -10,16 +10,8 @@ export class UserController extends Controller {
     @Response('500', 'Internal Server Error, when fails to connect to the DB')
     @SuccessResponse('200', 'List of all available users')
     @Get()
-    public getAllUsers(@Query() displayName?: string): User[] {
-        console.log("Get all users with display name: ", displayName);
-        const users: User[] = [];
-        const user = new User();
-        user.displayName = 'PR';
-        user.numberOfFriends = 10;
-        user.profession = 'Student';
-        user.profilePicUrl = '';
-        user.userId = 'pr';
-        users.push(user);
+    public async getAllUsers(@Query() displayName?: string): Promise<User[]> {
+        const users = await this.userManager.getAllUsers().toPromise();
         return users;
     }
 
@@ -28,12 +20,14 @@ export class UserController extends Controller {
     @Response('500', 'Failed to connect to the DB server')
     @Get('{id}')
     public getUser(id: string): User {
-        const user = new User();
-        user.displayName = 'PR';
-        user.numberOfFriends = 10;
-        user.profession = 'Student';
-        user.profilePicUrl = '';
-        user.userId = 'pr';
+        const user: User = {
+            displayName: 'PR',
+            email: 'a@b.com',
+            numberOfFriends: 10,
+            profession: 'Student',
+            profilePicUrl: '',
+            userId: 'pr'
+        };
         return user;
     }
 
@@ -41,9 +35,13 @@ export class UserController extends Controller {
     @Response('400', 'If any required fields are missing in the request')
     @SuccessResponse('201', 'Created')
     @Post()
-    public createUser(@Body() requestBody: UserCreateRequest): string {
-        console.log("Creating user", requestBody);
+    public async createUser(@Body() requestBody: UserDetails, ): Promise<any> {
+        const data = await this.userManager.createUser(requestBody).toPromise();
         this.setStatus(201);
-        return "1";
+        return {
+            userId: data
+        };
     }
+
+    private userManager: UserManager = new UserManager();
 }

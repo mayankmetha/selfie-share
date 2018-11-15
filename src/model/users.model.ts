@@ -1,20 +1,11 @@
-export class User {
-    public userId: string;
-    public displayName: string;
-    public profession: string;
-    public profilePicUrl: string;
-    public numberOfFriends: number;
-
-    constructor() {
-        this.userId = '';
-        this.displayName = '';
-        this.profession = '';
-        this.profilePicUrl = '';
-        this.numberOfFriends = 0;
-    }
+export interface UserDetails {
+    userId?: string;
+    email: string;
+    displayName: string;
+    profession: string;
+    profilePicUrl: string;
 }
 
-export interface UserCreateRequest {
-    userName: string;
-    email: string;
+export interface User extends UserDetails {
+    numberOfFriends: number;
 }

@@ -60,9 +60,9 @@ export class HttpClient {
         });
     }
 
-    public delete(relativeUrl: string): Observable<any> {
+    public delete(relativeUrl: string, id: string): Observable<any> {
         return new Observable<any>((observer: Observer<any>) => {
-            request.delete(this.fullUrl(relativeUrl), (error, response, body) => {
+            request.delete(this.fullUrl(relativeUrl + '/' + id), (error, response, body) => {
                 if (error) {
                     observer.error(error);
                 } else {
@@ -73,9 +73,9 @@ export class HttpClient {
         });
     }
 
-    public put(relativeUrl: string, body: any): Observable<any> {
+    public put(relativeUrl: string, id: string, body: any): Observable<any> {
         return new Observable<any>((observer: Observer<any>) => {
-            request.post(this.fullUrl(relativeUrl), { json: body }, (error, response, body) => {
+            request.post(this.fullUrl(relativeUrl + '/' + id), { json: body }, (error, response, body) => {
                 if (error) {
                     observer.error(error);
                 } else {

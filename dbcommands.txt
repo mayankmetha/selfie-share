@@ -1,0 +1,22 @@
+Download and install mysql.
+Start mysql: /etc/init.d/mysqld start
+
+Open Client: sudo mysql -u root
+Run commands:
+
+ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'password';
+
+flush privileges;
+---------------------------
+
+create database selfie_share;
+
+use selfie_share;
+
+create table users (
+  userId varchar(256) primary key,
+  displayName varchar(256) not null,
+  email varchar(256) not null,
+  profession varchar(256),
+  profilePicUrl varchar(2048)
+);
