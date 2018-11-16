@@ -6,6 +6,8 @@ import * as bodyParser from 'body-parser';
 import { WelcomeController } from './controllers';
 import { RegisterRoutes } from './routes/routes';
 import * as swaggerUI from 'swagger-ui-express';
+import * as errorHandler from 'api-error-handler';
+import { NextFunction } from 'connect';
 
 const swaggerJSON = require('../../src/swagger/swagger.json');
 
@@ -16,6 +18,7 @@ const port: number = (process.env.PORT) ? Number(process.env.PORT) : 3000;
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(errorHandler.default());
 
 // Mount the WelcomeController at the /welcome route
 

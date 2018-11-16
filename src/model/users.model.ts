@@ -1,9 +1,14 @@
 export interface UserDetails {
-    userId?: string;
-    email: string;
     displayName: string;
+    email: string;
     profession: string;
     profilePicUrl: string;
+    description: string;
+    age: number;    
+}
+
+export interface UserCreateRequest extends UserDetails {
+    password: string;
 }
 
 export interface User extends UserDetails {

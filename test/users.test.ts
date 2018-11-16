@@ -1,5 +1,5 @@
-import { expect, assert } from 'chai';
-import { User, UserDetails } from '../src/model';
+import { expect } from 'chai';
+import { User, UserCreateRequest } from '../src/model';
 import { HttpClient } from '../src/service/http.service';
 import 'mocha';
 
@@ -11,10 +11,11 @@ describe('UsersApiTests', () => {
     describe('POST /users tests', () => {
         it('Should create a new user', () => {
             console.log('Creating user with name ', userName);
-            const user: UserDetails = {
+            const user: UserCreateRequest = {
                 displayName: 'displayName', email: 'test@test.com',
-                profession: '', profilePicUrl: ''
+                profession: '', profilePicUrl: '', age: 20, description: '', password: 'asfdasf'
             };
+
             var pr = httpClient.post('users', user);
             pr.subscribe((data: any) => {
                 console.log("Successfully created user: ", data);
@@ -28,10 +29,11 @@ describe('UsersApiTests', () => {
         });
 
         it('Should fail to create a user', () => {
-            const user: UserDetails = {
+            const user: UserCreateRequest = {
                 displayName: 'displayName', email: 'test@test.com',
-                profession: '', profilePicUrl: ''
+                profession: '', profilePicUrl: '', age: 20, description: '', password: 'asfdasf'
             };
+
             var pr = httpClient.post('users', user);
             pr.subscribe((data: any) => {
                 console.log("Successfully created user: ", data);
@@ -60,11 +62,10 @@ describe('UsersApiTests', () => {
             var pr = httpClient.getSimpleFiltered('users', 'displayName', 'test');
             pr.subscribe((data: User[]) => {
                 console.log('Got ', data.length + ' users');
-            },
-                error => {
-                    console.log('Error: ', error);
-                    expect.fail(error);
-                });
+            }, error => {
+                console.log('Error: ', error);
+                expect.fail(error);
+            });
             return pr;
         });
     });
