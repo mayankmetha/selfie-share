@@ -23,7 +23,8 @@ create table users (
 
 create table images (
   userId varchar(256) NOT NULL,
-  imageId varchar(2048) NOT NULL,
+  imageId varchar(256) NOT NULL,
+  imageLoc varchar(2048) NOT NULL,
   PRIMARY KEY(userId,imageId),
   CONSTRAINT fk
   FOREIGN KEY (userId)

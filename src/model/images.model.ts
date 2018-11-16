@@ -1,4 +1,5 @@
 export interface ImageDetails {
-    userId?: string;
+    userId: string;
     imageId?: string;
+    imageLoc: string;
 }
