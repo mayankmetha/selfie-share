@@ -2,7 +2,6 @@
   "name": "selfie-share",
   "version": "1.0.0",
   "description": "",
-  "main": "main.js",
   "scripts": {
     "build": "rm -r build; tsoa swagger && tsoa routes && tsc",
     "start": "node build/src/server.js",
@@ -24,6 +23,7 @@
     "@types/mysql2": "github:types/mysql2",
     "@types/request": "^2.48.1",
     "@types/shortid": "0.0.29",
+    "@types/swagger-ui-express": "^3.0.0",
     "aws-sdk": "^2.351.0",
     "body-parser": "^1.18.3",
     "chai": "^4.2.0",
