@@ -3,7 +3,7 @@ import * as express from 'express';
 import * as bodyParser from 'body-parser';
 
 // Import WelcomeController from controllers entry point
-import { WelcomeController } from './controllers';
+// import { WelcomeController } from './controllers';
 import { RegisterRoutes } from './routes/routes';
 import * as swaggerUI from 'swagger-ui-express';
 import * as errorHandler from 'api-error-handler';
@@ -22,7 +22,7 @@ app.use(errorHandler.default());
 
 // Mount the WelcomeController at the /welcome route
 
-app.use('/welcome', WelcomeController);
+//app.use('/welcome', WelcomeController);
 //app.use(methodOverride());
 RegisterRoutes(app);
 
