@@ -20,11 +20,16 @@ export class ImageManager {
             throw 'Image location cannot be empty';
         }
 
+        if(!image.imageTime || image.imageTime === null) {
+            throw 'Image timestamp cannot be empty';
+        } 
+
         return new Observable<string>((observer: Observer<string>) => {
             image.imageId = shortid.generate();
             try {
-                this.connection.query('INSERT INTO images values (?,?,?)',
-                [image.userId,image.imageId,image.imageLoc],
+                image.imageTime = (new Date).getTime();
+                this.connection.query('INSERT INTO images values (?,?,?,?,?)',
+                [image.userId,image.imageId,image.imageLoc,image.tag,image.imageTime],
                 (error, data) => {
 
                     if(error) {
@@ -33,7 +38,7 @@ export class ImageManager {
                     }
                 });
 
-                console.log('Successfully created image: ',image.imageId);
+                console.log('User ',image.userId,' created image: ',image.imageId);
                 observer.next(image.imageId);
                 observer.complete();
             } catch (error) {
@@ -60,7 +65,9 @@ export class ImageManager {
                         imageDetails.push(<ImageDetails>{
                             userId: image.userId,
                             imageId: image.imageId,
-                            imageLoc: image.imageLoc
+                            imageLoc: image.imageLoc,
+                            tag: image.tag,
+                            imageTime: image.imageTime
                         });
                     }
                     observer.next(imageDetails);
