@@ -20,3 +20,13 @@ create table users (
   profession varchar(256),
   profilePicUrl varchar(2048)
 );
+
+create table images (
+  userId varchar(256) NOT NULL,
+  imageId varchar(2048) NOT NULL,
+  PRIMARY KEY(userId,imageId),
+  CONSTRAINT fk
+  FOREIGN KEY (userId)
+  REFERENCES users(userId)
+  ON DELETE CASCADE
+);
