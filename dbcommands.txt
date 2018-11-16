@@ -28,7 +28,7 @@ create table images (
   imageId varchar(256) NOT NULL,
   imageLoc varchar(2048) NOT NULL,
   tags varchar(256),
-  imageTime timestamp NOT NULL,
+  imageTime varchar(25) NOT NULL,
   PRIMARY KEY(userId,imageId),
   CONSTRAINT fk
   FOREIGN KEY (userId)

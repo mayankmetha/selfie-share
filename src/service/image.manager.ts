@@ -47,6 +47,35 @@ export class ImageManager {
         });
     }
 
+    public deleteImage(userId: string, imageId: string):Observable<string> {
+        if(!userId || userId === '') {
+            throw 'UserId is required to delete image';
+        }
+
+        if(!imageId || imageId === '') {
+            throw 'ImageId is required to delete image';
+        }
+
+        return new Observable<string>((observer:Observer<string>) => {
+            try {
+                this.connection.query('DELETE FROM images WHERE userId=(?) AND imageId=(?)',[userId,imageId],
+                (error, data) => {
+
+                    if(error) {
+                        console.log("Query failed: ", error);
+                        throw error;
+                    }
+                });
+
+                console.log('User ',userId,' deleted image: ',imageId);
+                observer.next(userId);
+                observer.complete();
+            } catch (error) {
+                observer.error(error);
+            }
+        });
+    }
+
     public getAllImages(userId: string): Observable<ImageDetails[]> {
         if(!userId || userId === '') {
             throw 'UserId is required to retrive image';

@@ -30,5 +30,12 @@ export class ImageController extends Controller {
         }
     }
 
+    @Response('500', 'Internal Server Error, when fails to connect to the DB')
+    @SuccessResponse('200', 'List of all available users image')
+    @Delete('users/{userId}/images/{imageId}')
+    public async deleteImage(userId: string, imageId: string): Promise<void> {
+        await this.imageManager.deleteImage(userId,imageId).toPromise();
+    }
+
     private imageManager: ImageManager = new ImageManager();
 }
