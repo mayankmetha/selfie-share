@@ -31,46 +31,110 @@ export class UserManager {
         }
 
         return new Observable<void>((observer: Observer<void>) => {
-            this.connection.query('INSERT INTO users values (?,?,?,?,?,?,?)',
-                [user.displayName, user.email, user.profilePicUrl, user.profession, user.description, user.age, 0],
-                (error) => {
+            this.getUser(user.displayName).subscribe(data => {
+                console.error('Found duplicate user name');
+                observer.error('Username already exists');
+                return;
+            }, error => {
+                this.connection.query('INSERT INTO users values (?,?,?,?,?,?,?)',
+                    [user.displayName, user.email, user.profilePicUrl, user.profession, user.description, user.age, 0],
+                    (error) => {
+                        if (error) {
+                            observer.error(error.message);
+                        } else {
+                            console.log('Successfully created user: ', user.displayName);
+                            observer.next(undefined);
+                            observer.complete();
+                        }
+                    });
+            });
+        });
+    }
+
+    public getAllUsers(displayName?: string): Observable<User[]> {
+        return new Observable<User[]>((observer: Observer<User[]>) => {
+            this.connection.query('SELECT * FROM users', (error, data: mysql.RowDataPacket[]) => {
+                if (error) {
+                    observer.error(error.message);
+                    return;
+                }
+
+                let users: User[] = [];
+                for (let i = 0; i < data.length; ++i) {
+                    const user = data[i];
+                    users.push(<User>{
+                        displayName: user.displayName,
+                        email: user.email,
+                        profilePicUrl: user.profilePicUrl,
+                        profession: user.profession,
+                        description: user.description,
+                        age: user.age,
+                        numberOfFriends: 0
+                    });
+                }
+
+                if (displayName && displayName !== '') {
+                    console.log('Filtering users by name: ', displayName);
+                    const tmpUsers: User[] = [];
+                    users.forEach((user: User) => {
+                        if (user.displayName.toLowerCase().indexOf(displayName.toLowerCase()) >= 0) {
+                            tmpUsers.push(user);
+                        }
+                    });
+                    users = tmpUsers;
+                }
+
+                observer.next(users);
+                observer.complete();
+            });
+        });
+    }
+
+    public getUser(displayName: string): Observable<User> {
+        return new Observable<User>((observer: Observer<User>) => {
+            this.connection.query('SELECT * FROM users WHERE displayName = ?', displayName,
+                (error, data: mysql.RowDataPacket[]) => {
                     if (error) {
-                        console.error("Query failed: ", error);
-                        observer.error(error);
-                    } else {
-                        console.log('Successfully created user: ', user.displayName);
-                        observer.next(undefined);
-                        observer.complete();
+                        console.log('Returning error');
+                        observer.error(error.message);
+                        return;
                     }
+
+                    if (data.length !== 1) {
+                        observer.error('User not found');
+                        return;
+                    }
+
+                    const user = data[0];
+                    observer.next(<User>{
+                        displayName: user.displayName,
+                        email: user.email,
+                        profilePicUrl: user.profilePicUrl,
+                        profession: user.profession,
+                        description: user.description,
+                        age: user.age,
+                        numberOfFriends: 0
+                    });
+                    observer.complete();
                 });
         });
     }
 
-    public getAllUsers(): Observable<User[]> {
-        return new Observable<User[]>((observer: Observer<User[]>) => {
-            try {
-                this.connection.query('SELECT * FROM users', (error, data: mysql.RowDataPacket[]) => {
+    public deleteUser(displayName: string): Observable<void> {
+        return new Observable<void>((observer: Observer<void>) => {
+            if (!displayName || displayName === '') {
+                observer.error('The user name cannot be empty');
+            } else {
+                this.connection.query('DELETE FROM users WHERE displayName = ?', displayName, (error, data) => {
                     if (error) {
-                        throw error;
+                        console.error('Failed to delete user ', displayName, ': ', error);
+                        observer.error(error.message);
+                    } else {
+                        console.log('Successfully deleted user ', displayName);
+                        observer.next(undefined);
+                        observer.complete();
                     }
-                    const users: User[] = [];
-                    for (let i = 0; i < data.length; ++i) {
-                        const user = data[i];
-                        users.push(<User>{
-                            displayName: user.displayName,
-                            email: user.email,
-                            profilePicUrl: user.profilePicUrl,
-                            profession: user.profession,
-                            description: user.description,
-                            age: user.age,
-                            numberOfFriends: 0
-                        });
-                    }
-                    observer.next(users);
-                    observer.complete();
                 });
-            } catch (error) {
-                observer.error(error);
             }
         });
     }

@@ -12,7 +12,7 @@ export class UserController extends Controller {
     @Get()
     public async getAllUsers(@Query() displayName?: string): Promise<User[]> {
         try {
-            const users = this.userManager.getAllUsers().toPromise();
+            const users = await this.userManager.getAllUsers().toPromise();
             return users;
         } catch (error) {
             console.error('Failed to get users: ' + error);
@@ -25,17 +25,15 @@ export class UserController extends Controller {
     @Response('404', 'Failed to find the user with the specified Id')
     @Response('500', 'Failed to connect to the DB server')
     @Get('{id}')
-    public getUser(id: string): User {
-        const user: User = {
-            displayName: 'PR',
-            email: 'a@b.com',
-            numberOfFriends: 10,
-            profession: 'Student',
-            profilePicUrl: '',
-            description: '',
-            age: 20
-        };
-        return user;
+    public async getUser(id: string): Promise<User> {
+        try {
+            const users = await this.userManager.getUser(id).toPromise();
+            return users;
+        } catch (error) {
+            console.error('Failed to get users: ' + error);
+            this.setStatus(500);
+            throw new CustomError(500, error);
+        }
     }
 
     @Response('500', 'If the username requested already exists')
@@ -48,6 +46,24 @@ export class UserController extends Controller {
             this.setStatus(201);
         } catch (error) {
             console.error('Failed to create user: ', error);
+            this.setStatus(500);
+            throw new CustomError(500, error);
+        }
+    }
+
+    @Response('500', 'DB connection failed')
+    @Response('400', 'The id was not specified')
+    @SuccessResponse('200', 'The user doesn\'t exist, or was successfully deleted')
+    @Delete('{id}')
+    public async deleteUser(id: string): Promise<void> {
+        if (!id || id === '') {
+            throw new CustomError(400, 'The user name cannot be empty');
+        }
+
+        try {
+            await this.userManager.deleteUser(id).toPromise();
+        } catch (error) {
+            console.error('Failed to delete user: ', error);
             this.setStatus(500);
             throw new CustomError(500, error);
         }

@@ -8,6 +8,7 @@ import { RegisterRoutes } from './routes/routes';
 import * as swaggerUI from 'swagger-ui-express';
 import * as errorHandler from 'api-error-handler';
 import { NextFunction } from 'connect';
+import { CustomError } from './model';
 
 const swaggerJSON = require('../../src/swagger/swagger.json');
 
@@ -18,7 +19,6 @@ const port: number = (process.env.PORT) ? Number(process.env.PORT) : 3000;
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(errorHandler.default());
 
 // Mount the WelcomeController at the /welcome route
 
@@ -32,4 +32,11 @@ app.use('/', swaggerUI.serve, swaggerUI.setup(swaggerJSON));
 app.listen(port, () => {
     // Success callback
     console.log(`Listening at http://localhost:${port}/`);
+});
+
+app.use(function (err: CustomError, req: express.Request, res: express.Response, next: NextFunction) {
+    console.error(err.stack)
+    res.status(err.statusCode).send(
+        { error: err.message }
+    );
 });

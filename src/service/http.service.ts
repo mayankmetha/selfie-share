@@ -13,7 +13,7 @@ export class HttpClient {
     public get(relativeUrl: string): Observable<any> {
         return new Observable<any>((observer: Observer<any>) => {
             request.get(this.fullUrl(relativeUrl), (error, response, body) => {
-                if (error) {
+                if (this.isFailed(response.statusCode)) {
                     observer.error(error);
                 } else {
                     observer.next(body);
@@ -37,7 +37,7 @@ export class HttpClient {
             });
 
             request.get(this.fullUrl(relativeUrl), { qs: properties }, (error, response, body) => {
-                if (error) {
+                if (this.isFailed(response.statusCode)) {
                     observer.error(error);
                 } else {
                     observer.next(body);
@@ -50,7 +50,7 @@ export class HttpClient {
     public post(relativeUrl: string, body: any): Observable<any> {
         return new Observable<any>((observer: Observer<any>) => {
             request.post(this.fullUrl(relativeUrl), { json: body }, (error, response, body) => {
-                if (error) {
+                if (this.isFailed(response.statusCode)) {
                     observer.error(error ? error : body);
                 } else {
                     observer.next(body);
@@ -63,7 +63,7 @@ export class HttpClient {
     public delete(relativeUrl: string, id: string): Observable<any> {
         return new Observable<any>((observer: Observer<any>) => {
             request.delete(this.fullUrl(relativeUrl + '/' + id), (error, response, body) => {
-                if (error) {
+                if (this.isFailed(response.statusCode)) {
                     observer.error(error);
                 } else {
                     observer.next(body);
@@ -76,7 +76,7 @@ export class HttpClient {
     public put(relativeUrl: string, id: string, body: any): Observable<any> {
         return new Observable<any>((observer: Observer<any>) => {
             request.post(this.fullUrl(relativeUrl + '/' + id), { json: body }, (error, response, body) => {
-                if (error) {
+                if (this.isFailed(response.statusCode)) {
                     observer.error(error);
                 } else {
                     observer.next(body);
@@ -84,6 +84,14 @@ export class HttpClient {
                 }
             });
         });
+    }
+
+    private isFailed(status: number): boolean {
+        if (status === 200 || status === 201 || status === 204) {
+            return false;
+        }
+
+        return true;
     }
 
     private baseUrl: string;
