@@ -1,6 +1,6 @@
 
 // Import only what we need from express
-import { User, UserDetails } from '../model';
+import { User, CustomError, UserCreateRequest } from '../model';
 import { Route, Get, Post, Body, Query, SuccessResponse, Response, Controller, Delete } from 'tsoa';
 import { UserManager } from '../service';
 
@@ -11,8 +11,14 @@ export class UserController extends Controller {
     @SuccessResponse('200', 'List of all available users')
     @Get()
     public async getAllUsers(@Query() displayName?: string): Promise<User[]> {
-        const users = await this.userManager.getAllUsers().toPromise();
-        return users;
+        try {
+            const users = this.userManager.getAllUsers().toPromise();
+            return users;
+        } catch (error) {
+            console.error('Failed to get users: ' + error);
+            this.setStatus(500);
+            throw new CustomError(500, error);
+        }
     }
 
     @SuccessResponse('200', 'User with the specified id')
@@ -26,7 +32,8 @@ export class UserController extends Controller {
             numberOfFriends: 10,
             profession: 'Student',
             profilePicUrl: '',
-            userId: 'pr'
+            description: '',
+            age: 20
         };
         return user;
     }
@@ -35,12 +42,15 @@ export class UserController extends Controller {
     @Response('400', 'If any required fields are missing in the request')
     @SuccessResponse('201', 'Created')
     @Post()
-    public async createUser(@Body() requestBody: UserDetails, ): Promise<any> {
-        const data = await this.userManager.createUser(requestBody).toPromise();
-        this.setStatus(201);
-        return {
-            userId: data
-        };
+    public async createUser(@Body() requestBody: UserCreateRequest): Promise<void> {
+        try {
+            var data = await this.userManager.createUser(requestBody).toPromise();
+            this.setStatus(201);
+        } catch (error) {
+            console.error('Failed to create user: ', error);
+            this.setStatus(500);
+            throw new CustomError(500, error);
+        }
     }
 
     private userManager: UserManager = new UserManager();

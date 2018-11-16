@@ -14,11 +14,13 @@ create database selfie_share;
 use selfie_share;
 
 create table users (
-  userId varchar(256) primary key,
-  displayName varchar(256) not null,
+  displayName varchar(256) primary key,
   email varchar(256) not null,
   profession varchar(256),
-  profilePicUrl varchar(2048)
+  profilePicUrl varchar(2048),
+  age varchar(64),
+  passwordHash varchar(256) not null,
+  description varchar(4096)
 );
 
 create table images (

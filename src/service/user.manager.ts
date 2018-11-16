@@ -1,17 +1,27 @@
-import { UserDetails, User } from '../model';
-import * as shortid from 'shortid';
+import { User, UserCreateRequest } from '../model';
 import * as mysql from 'mysql2';
-import { Connection, RowDataPacket } from 'mysql2';
+import { Connection } from 'mysql2';
 import { Observable, Observer } from 'rxjs';
+import * as fs from 'fs';
 
 export class UserManager {
+
+    public constructor() {
+        this.dbConfig = JSON.parse(fs.readFileSync(__dirname + '/../dbconfig.json', 'UTF-8'));
+        this.connection = mysql.createConnection(<mysql.ConnectionOptions>{
+            host: this.dbConfig.host,
+            user: this.dbConfig.user,
+            password: this.dbConfig.password,
+            database: this.dbConfig.database
+        });
+    }
 
     /**
      * Inserts a user into the DB. If the user exists, throws an error.
      * Returns a unique id for the user.
      * @param user 
      */
-    public createUser(user: UserDetails): Observable<string> {
+    public createUser(user: UserCreateRequest): Observable<void> {
         if (!user || !user.email || user.email === '') {
             throw 'The email for the user cannot be empty';
         }
@@ -20,25 +30,19 @@ export class UserManager {
             throw 'The username cannot be empty';
         }
 
-        return new Observable<string>((observer: Observer<string>) => {
-            user.userId = shortid.generate();
-            try {
-                this.connection.query('INSERT INTO users values (?,?,?,?,?)',
-                    [user.userId, user.displayName, user.email, user.profession, user.userId, user.profilePicUrl],
-                    (error, data) => {
-
-                        if (error) {
-                            console.error("Query failed: ", error);
-                            throw error;
-                        }
-                    });
-
-                console.log('Successfully created user: ', user.userId);
-                observer.next(user.userId);
-                observer.complete();
-            } catch (error) {
-                observer.error(error);
-            }
+        return new Observable<void>((observer: Observer<void>) => {
+            this.connection.query('INSERT INTO users values (?,?,?,?,?,?,?)',
+                [user.displayName, user.email, user.profilePicUrl, user.profession, user.description, user.age, 0],
+                (error) => {
+                    if (error) {
+                        console.error("Query failed: ", error);
+                        observer.error(error);
+                    } else {
+                        console.log('Successfully created user: ', user.displayName);
+                        observer.next(undefined);
+                        observer.complete();
+                    }
+                });
         });
     }
 
@@ -53,11 +57,12 @@ export class UserManager {
                     for (let i = 0; i < data.length; ++i) {
                         const user = data[i];
                         users.push(<User>{
-                            userId: user.userId,
                             displayName: user.displayName,
                             email: user.email,
                             profilePicUrl: user.profilePicUrl,
                             profession: user.profession,
+                            description: user.description,
+                            age: user.age,
                             numberOfFriends: 0
                         });
                     }
@@ -70,10 +75,6 @@ export class UserManager {
         });
     }
 
-    private connection: Connection = mysql.createConnection(<mysql.ConnectionOptions>{
-        host: 'localhost',
-        user: 'root',
-        password: 'password',
-        database: 'selfie_share'
-    });
+    private dbConfig: any = {};
+    private connection: Connection;
 }

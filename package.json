@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "build": "rm -r build; tsoa swagger && tsoa routes && tsc",
+    "build": "rm -r build; tsoa swagger && tsoa routes && tsc && cp src/dbconfig.json build/src",
+    "simple-start": "tsc && npm start",
     "start": "node build/src/server.js",
     "dev": "concurrent \"tsc --watch\" \"nodemon build/server.js\"",
     "routes": "tsoa routes",
@@ -15,6 +16,7 @@
     "nodemon": "^1.18.5"
   },
   "dependencies": {
+    "@types/api-error-handler": "^1.0.31",
     "@types/chai": "^4.1.7",
     "@types/es6-shim": "^0.31.38",
     "@types/express": "^4.16.0",
@@ -23,6 +25,7 @@
     "@types/request": "^2.48.1",
     "@types/shortid": "0.0.29",
     "@types/swagger-ui-express": "^3.0.0",
+    "api-error-handler": "^1.0.0",
     "aws-sdk": "^2.351.0",
     "body-parser": "^1.18.3",
     "chai": "^4.2.0",
