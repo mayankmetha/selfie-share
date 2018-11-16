@@ -34,4 +34,15 @@ create table images (
   FOREIGN KEY (userId)
   REFERENCES users(userId)
   ON DELETE CASCADE
+  ON UPDATE CASCADE
+);
+
+create table friends (
+  peer1 varchar(256) not null,
+  peer2 varchar(256) not null,
+  friendshipDate varchar(128) not null,
+
+  PRIMARY KEY (peer1, peer2),
+  FOREIGN KEY (peer1) references users(displayName) ON UPDATE CASCADE,
+  FOREIGN KEY (peer2) references users(displayName) ON UPDATE CASCADE
 );

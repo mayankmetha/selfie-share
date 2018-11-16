@@ -1,6 +1,6 @@
 
 // Import only what we need from express
-import { User, CustomError, UserCreateRequest } from '../model';
+import { User, CustomError, UserCreateRequest, Friends } from '../model';
 import { Route, Get, Post, Body, Query, SuccessResponse, Response, Controller, Delete } from 'tsoa';
 import { UserManager } from '../service';
 
@@ -12,7 +12,7 @@ export class UserController extends Controller {
     @Get()
     public async getAllUsers(@Query() displayName?: string): Promise<User[]> {
         try {
-            const users = await this.userManager.getAllUsers().toPromise();
+            const users = await this.userManager.getAllUsers(displayName).toPromise();
             return users;
         } catch (error) {
             console.error('Failed to get users: ' + error);
@@ -31,8 +31,12 @@ export class UserController extends Controller {
             return users;
         } catch (error) {
             console.error('Failed to get users: ' + error);
-            this.setStatus(500);
-            throw new CustomError(500, error);
+            let status = 500;
+            if (String(error).toLowerCase().indexOf('not found') >= 0) {
+                status = 404;
+            }
+            this.setStatus(status);
+            throw new CustomError(status, error);
         }
     }
 
@@ -64,6 +68,48 @@ export class UserController extends Controller {
             await this.userManager.deleteUser(id).toPromise();
         } catch (error) {
             console.error('Failed to delete user: ', error);
+            this.setStatus(500);
+            throw new CustomError(500, error);
+        }
+    }
+
+    @Response('500', 'Internal server error')
+    @Response('404', 'The specified user was not found')
+    @SuccessResponse('200', 'List of friends for the user')
+    @Get('{id}/friends')
+    public async getFriendsForUser(id: string): Promise<Friends[]> {
+        try {
+            await this.getUser(id); // Checks to see if user exists
+            return await this.userManager.getFriendsForUser(id).toPromise();
+        } catch (error) {
+            console.error('Failed to get friends for user: ', error);
+            if (error instanceof CustomError) {
+                this.setStatus(error.statusCode);
+                throw error;
+            }
+
+            this.setStatus(500);
+            throw new CustomError(500, error);
+        }
+    }
+
+    @Response('500', 'Internal server error')
+    @Response('404', 'The specified user was not found')
+    @SuccessResponse('200', 'List of friends for the user')
+    @Delete('{user1}/friends/{user2}')
+    public async unfriendUsers(user1: string, user2: string): Promise<void> {
+        try {
+            await this.getUser(user1); // Checks to see if user exists
+            await this.getUser(user2); // Checks to see if user exists
+
+            await this.userManager.unfriendUsers(user1, user2).toPromise();
+        } catch (error) {
+            console.error('Failed to get friends for user: ', error);
+            if (error instanceof CustomError) {
+                this.setStatus(error.statusCode);
+                throw error;
+            }
+
             this.setStatus(500);
             throw new CustomError(500, error);
         }

@@ -1,7 +1,6 @@
 import { assert } from 'chai';
 import { User, UserCreateRequest } from '../src/model';
 import { HttpClient } from '../src/service/http.service';
-import 'mocha';
 
 describe('UsersApiTests', () => {
     const httpClient: HttpClient = new HttpClient('http://localhost:3000');
@@ -16,13 +15,13 @@ describe('UsersApiTests', () => {
             };
 
             return httpClient.post('users', user).toPromise().catch((err) => {
-                assert.fail(err);
+                assert.isNull(err, err);
             });
         });
 
         it('Should fail to create a user', () => {
             const user: UserCreateRequest = {
-                displayName: 'displayName', email: 'test@test.com',
+                displayName: userName, email: 'test@test.com',
                 profession: '', profilePicUrl: '', age: 20, description: '', password: 'asfdasf'
             };
 
@@ -38,17 +37,43 @@ describe('UsersApiTests', () => {
             return httpClient.get('users').toPromise().then((data) => {
                 assert.isDefined(data);
                 assert(data.length > 0);
+                console.log('\n\n--------------------\n\n');
+                console.log(data);
+                console.log('\n\n--------------------\n\n');
             });
         });
 
         it('Should display all users of given name', () => {
             return httpClient.getSimpleFiltered('users', 'displayName', userName)
                 .toPromise()
-                .then(data => {
+                .then((data: User[]) => {
                     assert.isDefined(data);
                     assert(data.length > 0);
+                    console.log('\n\n--------------------\n\n');
+                    console.log(data);
+                    console.log('\n\n--------------------\n\n');
                 });
         });
+
+        it('Should get an individual user', () => {
+            return httpClient.get('users/' + userName)
+                .toPromise()
+                .then((data: User) => {
+                    assert.isDefined(data);
+                    console.log('\n\n--------------------\n\n');
+                    console.log(data);
+                    console.log('\n\n--------------------\n\n');
+                });
+        });
+
+        it('Should return an empty list of users', () => {
+            return httpClient.getSimpleFiltered('users', 'displayName', 'junkvaluestoomuch')
+                .toPromise()
+                .then((data: User[]) => {
+                    assert.isDefined(data);
+                    assert(data.length === 0, 'Error: ' + data.length + ' users returned instead of 0');
+                });
+        })
     });
 
     describe('DELETE /users tests', () => {
