@@ -27,7 +27,7 @@
     "aws-sdk": "^2.351.0",
     "body-parser": "^1.18.3",
     "chai": "^4.2.0",
-    "concurrently": "^1.0.0",
+    "concurrently": "^4.0.1",
     "express": "^4.16.4",
     "helmet": "^3.14.0",
     "mocha": "^5.2.0",
