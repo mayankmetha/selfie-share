@@ -2,11 +2,12 @@
 import * as express from 'express';
 import * as bodyParser from 'body-parser';
 
+import { UserController, ImageController } from './controllers'
+
 // Import WelcomeController from controllers entry point
 // import { WelcomeController } from './controllers';
 import { RegisterRoutes } from './routes/routes';
 import * as swaggerUI from 'swagger-ui-express';
-import * as errorHandler from 'api-error-handler';
 import { NextFunction } from 'connect';
 import { CustomError } from './model';
 

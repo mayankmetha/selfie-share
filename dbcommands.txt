@@ -32,7 +32,7 @@ create table images (
   PRIMARY KEY(userId,imageId),
   CONSTRAINT fk
   FOREIGN KEY (userId)
-  REFERENCES users(userId)
+  REFERENCES users(displayName)
   ON DELETE CASCADE
   ON UPDATE CASCADE
 );
