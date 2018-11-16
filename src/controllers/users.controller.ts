@@ -38,7 +38,7 @@ export class UserController extends Controller {
         return user;
     }
 
-    @Response('500', "If the username requested already exists")
+    @Response('500', 'If the username requested already exists')
     @Response('400', 'If any required fields are missing in the request')
     @SuccessResponse('201', 'Created')
     @Post()
