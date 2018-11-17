@@ -1,12 +1,14 @@
 import { assert } from 'chai';;
 import { HttpClient } from '../src/service/http.service';
 import { User, Friends, UserCreateRequest } from '../src/model';
+import * as fs from 'fs';
 
 describe('Friends API tests', () => {
 
     const user1 = 'user1';
     const user2 = 'user2';
-    const httpClient = new HttpClient('http://localhost:3000');
+    const config = JSON.parse(fs.readFileSync(__dirname + '/config.json', 'UTF-8'));
+    const httpClient: HttpClient = new HttpClient(config.serverUrl);
 
 
     async function createUser(userName: string): Promise<string> {
@@ -23,21 +25,27 @@ describe('Friends API tests', () => {
     }
 
     before(async () => {
-        // Create 2 users, 
-        const userA = await createUser(user1);
-        const userB = await createUser(user2);
-        assert.isNotNull(userA, 'Failed to create user1');
-        assert.isNotNull(userB, 'Failed to create user2');
+        return new Promise(async resolve => {
+            // Create 2 users, 
+            const userA = await createUser(user1);
+            const userB = await createUser(user2);
+            assert.isNotNull(userA, 'Failed to create user1');
+            assert.isNotNull(userB, 'Failed to create user2');
 
-        // Create friend request
+            // Create friend request
 
-        // Accept friend request
+            // Accept friend request
+            resolve();
+        });
     });
 
     after(async () => {
-        // Delete the users
-        await httpClient.delete('users', user1).toPromise();
-        await httpClient.delete('users', user2).toPromise();
+        return new Promise(async (resolve) => {
+            // Delete the users
+            await httpClient.delete('users', user1).toPromise();
+            await httpClient.delete('users', user2).toPromise();
+            resolve();
+        });
     });
 
     it('Should get friends of a user', async () => {

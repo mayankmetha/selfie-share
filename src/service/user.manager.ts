@@ -178,10 +178,11 @@ export class UserManager {
                         console.log('Found ', data.length, ' friends for user ', displayName);
                         const friends: Friends[] = [];
                         data.forEach(friend => {
+                            // Set peer1 always to current user
                             friends.push(<Friends>{
                                 friendId: friend.friendId,
-                                peer1: friend.peer1,
-                                peer2: friend.peer2,
+                                peer1: displayName,
+                                peer2: ((displayName === friend.peer1) ? friend.peer2 : friend.peer1),
                                 friendshipDate: this.getFormattedDate(friend.friendshipDate)
                             });
                         });

@@ -1,9 +1,11 @@
 import { assert } from 'chai';
 import { User, UserCreateRequest } from '../src/model';
 import { HttpClient } from '../src/service/http.service';
+import * as fs from 'fs';
 
 describe('UsersApiTests', () => {
-    const httpClient: HttpClient = new HttpClient('http://localhost:3000');
+    const config = JSON.parse(fs.readFileSync(__dirname + '/config.json', 'UTF-8'));
+    const httpClient: HttpClient = new HttpClient(config.serverUrl);
     const userName = Number(Math.floor(Math.random() * 100) + 1).toString();
 
     describe('POST /users tests', () => {
@@ -36,7 +38,7 @@ describe('UsersApiTests', () => {
         it('Should return list of users', () => {
             return httpClient.get('users').toPromise().then((data) => {
                 assert.isDefined(data);
-                assert(data.length > 0);
+                assert.isAbove(JSON.parse(data).length, 0);
                 console.log('\n\n--------------------\n\n');
                 console.log(data);
                 console.log('\n\n--------------------\n\n');
@@ -46,9 +48,9 @@ describe('UsersApiTests', () => {
         it('Should display all users of given name', () => {
             return httpClient.getSimpleFiltered('users', 'displayName', userName)
                 .toPromise()
-                .then((data: User[]) => {
+                .then((data: string) => {
                     assert.isDefined(data);
-                    assert(data.length > 0);
+                    assert.isAbove(JSON.parse(data).length, 0, 'Expected number of users to be greater than 0');
                     console.log('\n\n--------------------\n\n');
                     console.log(data);
                     console.log('\n\n--------------------\n\n');
@@ -69,9 +71,9 @@ describe('UsersApiTests', () => {
         it('Should return an empty list of users', () => {
             return httpClient.getSimpleFiltered('users', 'displayName', 'junkvaluestoomuch')
                 .toPromise()
-                .then((data: User[]) => {
-                    assert.isDefined(data);
-                    assert(data.length === 0, 'Error: ' + data.length + ' users returned instead of 0');
+                .then((users: string) => {
+                    assert.isDefined(users);
+                    assert.equal(JSON.parse(users).length, 0, 'Error: ' + users.length + ' users returned instead of 0');
                 });
         })
     });

@@ -47,3 +47,14 @@ create table friends (
   FOREIGN KEY (peer1) references users(displayName) ON UPDATE CASCADE,
   FOREIGN KEY (peer2) references users(displayName) ON UPDATE CASCADE
 );
+
+create table shared_images (
+  imageId varchar(256) NOT NULL,
+  sharedBy varchar(256) NOT NULL,
+  sharedWith varchar(256) NOT NULL,
+  sharedDate varchar(25) NOT NULL,
+
+  PRIMARY KEY (imageId, sharedBy, sharedWith),
+  FOREIGN KEY (sharedBy) references users(displayName) ON UPDATE CASCADE ON DELETE CASCADE,
+  FOREIGN KEY (sharedWith) references users(displayName) ON UPDATE CASCADE ON DELETE CASCADE  
+);

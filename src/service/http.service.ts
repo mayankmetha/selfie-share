@@ -1,5 +1,7 @@
 import * as request from 'request';
 import { Observable, Observer } from 'rxjs';
+import * as fs from 'fs';
+import { ImageDetails } from '../model';
 
 export class HttpClient {
     public constructor(baseUrl: string) {
@@ -78,6 +80,23 @@ export class HttpClient {
             request.post(this.fullUrl(relativeUrl + '/' + id), { json: body }, (error, response, body) => {
                 if (this.isFailed(response.statusCode)) {
                     observer.error(error);
+                } else {
+                    observer.next(body);
+                    observer.complete();
+                }
+            });
+        });
+    }
+
+    public sendFile(userId: string, relativeUrl: string, fileLocalPath: string, metadata?: any): Observable<any> {
+        return new Observable<any>((observer: Observer<any>) => {
+            const body = {
+                data: metadata,
+                file: fs.createReadStream(fileLocalPath)
+            };
+            request.post(this.fullUrl(relativeUrl), { formData: body }, (err, res, body) => {
+                if (this.isFailed(res.statusCode)) {
+                    observer.error(err);
                 } else {
                     observer.next(body);
                     observer.complete();

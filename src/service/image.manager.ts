@@ -1,4 +1,4 @@
-import { ImageDetails } from '../model/images.model';
+import { ImageDetails, SharedImage } from '../model/images.model';
 import * as shortid from 'shortid';
 import * as mysql from 'mysql2';
 import { Connection, RowDataPacket } from 'mysql2';
@@ -108,6 +108,40 @@ export class ImageManager {
             }
         });
     }
+
+    public getImage(imageId: string): Observable<ImageDetails> {
+        return new Observable<ImageDetails>((observer: Observer<ImageDetails>) => {
+
+        });
+    }
+
+    public getImagesSharedWithUser(displayName: string): Observable<ImageDetails[]> {
+        return new Observable<ImageDetails[]>((observer: Observer<ImageDetails[]>) => {
+            if (!displayName || displayName === '') {
+                observer.error('The user name cannot be empty');
+                return;
+            }
+
+            // Get all images which have been shared with this user.
+            this.dbConnection.getConnection().query('SELECT * from shared_images WHERE sharedWith = ?', displayName,
+                (error, data: mysql.RowDataPacket[]) => {
+                    if (error) {
+                        console.error('Failed to get images shared with user ', error);
+                        observer.error('Failed to get shared images: ' + error.message);
+                        return;
+                    }
+
+                    console.log('Found ', data.length, ' images shared with user ', displayName);
+                    //const imageObs
+                    data.forEach((shImg) => {
+
+                    })
+                });
+
+        });
+    }
+
+
 
     private dbConnection: DbConnection = new DbConnection();
 }
