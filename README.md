@@ -25,6 +25,7 @@ In a different window, run `npm run test`
 <br>
 Known Issues:<br>
 Building sometimes fails with seg fault. Ignore for now. <br>
+Tests are failing - which is expected. Some APIs need to be added in the BL, and the same need to be invoked in the tests before they can pass.<br>
 Make sure to setup mysql locally. 
 `sudo apt install mysql`<br>
 
