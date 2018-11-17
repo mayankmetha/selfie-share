@@ -50,8 +50,8 @@ describe('Friends API tests', () => {
 
     it('Should get friends of a user', async () => {
         try {
-            const friendsUser1 = <Friends[]>await httpClient.get('users/' + user1 + '/friends').toPromise();
-            const friendsUser2 = <Friends[]>await httpClient.get('users/' + user2 + '/friends').toPromise();
+            const friendsUser1 = <Friends[]>JSON.parse(await httpClient.get('users/' + user1 + '/friends').toPromise());
+            const friendsUser2 = <Friends[]>JSON.parse(await httpClient.get('users/' + user2 + '/friends').toPromise());
 
             assert.isNotNull(friendsUser1, 'Failed to fetch user1 friends');
             assert.isNotNull(friendsUser2, 'Failed to get user2 friends');
@@ -70,8 +70,8 @@ describe('Friends API tests', () => {
         try {
             await httpClient.delete('users/' + user1 + '/friends', user2).toPromise();
 
-            const friendsUser1 = <Friends[]>await httpClient.get('users/' + user1 + '/friends').toPromise();
-            const friendsUser2 = <Friends[]>await httpClient.get('users/' + user2 + '/friends').toPromise();
+            const friendsUser1 = <Friends[]>JSON.parse(await httpClient.get('users/' + user1 + '/friends').toPromise());
+            const friendsUser2 = <Friends[]>JSON.parse(await httpClient.get('users/' + user2 + '/friends').toPromise());
 
             assert.isNotNull(friendsUser1, 'Failed to get friends for user1');
             assert.isNotNull(friendsUser2, 'Failed to get user2 friends');

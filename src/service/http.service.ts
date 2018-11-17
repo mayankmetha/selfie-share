@@ -64,7 +64,7 @@ export class HttpClient {
 
     public delete(relativeUrl: string, id: string): Observable<any> {
         return new Observable<any>((observer: Observer<any>) => {
-            request.delete(this.fullUrl(relativeUrl + '/' + id), (error, response, body) => {
+            request.delete(this.fullUrl(relativeUrl) + '/' + id, (error, response, body) => {
                 if (this.isFailed(response.statusCode)) {
                     observer.error(error);
                 } else {

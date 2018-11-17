@@ -3,16 +3,53 @@
 import { ImageDetails, CustomError } from '../model';
 import { Route, Get, Post, Body, Query, SuccessResponse, Response, Controller, Delete } from 'tsoa';
 import { ImageManager } from '../service';
+import request = require('request');
+import { Observable } from 'rxjs';
 
 @Route()
 export class ImageController extends Controller {
 
+    /**
+     * Get all images that belong to an user, or are shared with the user
+     * @param userId The user id
+     * @param sharedBy If specified, get all images that have been shared by this user, with the current user
+     * @param sharedWith If specified, get all images that the current user has shared with the specified user
+     */
+    @Response('404', 'The specified user was not found')
     @Response('500', 'Internal Server Error, when fails to connect to the DB')
     @SuccessResponse('200', 'List of all available users image')
     @Get('users/{userId}/images')
-    public async getAllImages(userId: string): Promise<ImageDetails[]> {
-        const images = await this.imageManager.getAllImages(userId).toPromise();
-        return images;
+    public async getAllImages(userId: string,
+        @Query() sharedBy?: string,
+        @Query() sharedWith?: string): Promise<ImageDetails[]> {
+        try {
+            console.log('Getting all images for user: ', userId, 'sharedWith=', sharedWith, 'sharedBy=', sharedBy);
+            if (!sharedBy && !sharedWith) {
+                return await this.imageManager.getAllImages(userId).toPromise();
+            } else if (!sharedWith) {
+                return await this.imageManager.getImagesSharedWithUser(userId, sharedBy ? sharedBy : '')
+                    .toPromise();
+            } else if (!sharedBy) {
+                return await this.imageManager.getImagesSharedByUser(userId, sharedWith ? sharedWith : '')
+                    .toPromise();
+            } else {
+                throw 'Invalid: Both sharedBy and sharedWith cannot be specified';
+            }
+        } catch (error) {
+            let status = 500;
+            console.error('Failed to get images for the user: ', error);
+
+            const tmpError = String(error).toLowerCase();
+
+            if (tmpError.indexOf('invalid') >= 0) {
+                status = 400;
+            } else if (tmpError.indexOf('not found') >= 0) {
+                status = 404;
+            }
+
+            this.setStatus(status);
+            throw new CustomError(status, error);
+        }
     }
 
     @Response('500', 'If the image Location requested already exists')
@@ -34,7 +71,98 @@ export class ImageController extends Controller {
     @SuccessResponse('200', 'List of all available users image')
     @Delete('users/{userId}/images/{imageId}')
     public async deleteImage(userId: string, imageId: string): Promise<void> {
-        await this.imageManager.deleteImage(userId,imageId).toPromise();
+        try {
+            // First check if the image has been shared with any users
+            const users: string[] = await this.imageManager.getUsersWithWhomImageHasBeenShared(userId, imageId).toPromise();
+            if (users.length > 0) {
+                // Unshare with each user
+                const promises: Promise<void>[] = [];
+                users.forEach(user => {
+                    promises.push(this.imageManager.unshareImageWithUser(userId, user, imageId).toPromise());
+                });
+                console.log('Unsharing image with ', users.length, ' users');
+
+                await Promise.all(promises);
+            }
+            await this.imageManager.deleteImage(userId, imageId).toPromise();
+        } catch (error) {
+            let status = 500;
+            console.error('Failed to share image: ', error);
+
+            const tmpError = String(error).toLowerCase();
+
+            if (tmpError.indexOf('invalid') >= 0) {
+                status = 400;
+            } else if (tmpError.indexOf('not found') >= 0) {
+                status = 404;
+            }
+
+            this.setStatus(status);
+            throw new CustomError(status, error);
+        }
+    }
+
+    /**
+     * Share an image with the given user
+     * @param userId the owner of the image
+     * @param targetUser the user to share the image with
+     * @param requestBody the image to share
+     */
+    @Response('400', 'The input parameters were invalid')
+    @Response('404', 'Either of the users, or the image was not found')
+    @Response('500', 'Internal server error has occurred')
+    @SuccessResponse('201', 'Successfully shared the image with the given user')
+    @Post('users/{userId}/friends/{targetUser}/images')
+    public async shareImageWithUser(userId: string, targetUser: string, @Body() requestBody: string[]): Promise<void> {
+        try {
+            await this.imageManager.shareImagesWithUser(userId, targetUser, requestBody);
+            this.setStatus(201);
+        } catch (error) {
+            let status = 500;
+            console.error('Failed to share image: ', error);
+
+            const tmpError = String(error).toLowerCase();
+
+            if (tmpError.indexOf('invalid') >= 0) {
+                status = 400;
+            } else if (tmpError.indexOf('not found') >= 0) {
+                status = 404;
+            }
+
+            this.setStatus(status);
+            throw new CustomError(status, error);
+        }
+    }
+
+    /**
+     * Unshare the specified image with the user
+     * @param userId the owner of the image
+     * @param targetUser the user with whom the image needs to be unshared
+     * @param imageId the image to unshare
+     */
+    @Response('500', 'Internal server error has occurred')
+    @Response('404', 'Any of the users, or the image was not found')
+    @Response('400', 'Any of the input parameters are invalid')
+    @SuccessResponse('200', 'The image has been unshared')
+    @Delete('users/{userId}/friends/{targetUser}/images/{imageId}')
+    public async unshareImageWithUser(userId: string, targetUser: string, imageId: string): Promise<void> {
+        try {
+            return await this.imageManager.unshareImageWithUser(userId, targetUser, imageId).toPromise();
+        } catch (error) {
+            let status = 500;
+            console.error('Failed to share image: ', error);
+
+            const tmpError = String(error).toLowerCase();
+
+            if (tmpError.indexOf('invalid') >= 0) {
+                status = 400;
+            } else if (tmpError.indexOf('not found') >= 0) {
+                status = 404;
+            }
+
+            this.setStatus(status);
+            throw new CustomError(status, error);
+        }
     }
 
     private imageManager: ImageManager = new ImageManager();

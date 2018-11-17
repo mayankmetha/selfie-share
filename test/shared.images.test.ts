@@ -37,7 +37,7 @@ describe('Shared Images API Tests', () => {
 
             // Upload an image
             await httpClient.sendFile(user1,
-                '/users/' + user1 + '/images', __dirname + '/selfie.share.jpg',
+                'users/' + user1 + '/images', __dirname + '/selfie.share.jpg',
                 <ImageDetails>{
                     imageLoc: __dirname + '/selfie.share.jpg',
                     imageTime: (new Date()).getTime(),
@@ -46,7 +46,7 @@ describe('Shared Images API Tests', () => {
 
 
             await httpClient.sendFile(user2,
-                '/users/' + user2 + '/images', __dirname + '/selfie.share.jpg',
+                'users/' + user2 + '/images', __dirname + '/selfie.share.jpg',
                 <ImageDetails>{
                     imageLoc: __dirname + '/selfie.share.jpg',
                     imageTime: (new Date()).getTime(),
@@ -59,7 +59,7 @@ describe('Shared Images API Tests', () => {
     after('TearDown', async () => {
         try {
             // Unfriend users
-            await httpClient.delete('/users/' + user1 + '/friends/', user2);
+            await httpClient.delete('users/' + user1 + '/friends/', user2);
         } catch (error) { }
 
         // Delete the users
@@ -71,14 +71,12 @@ describe('Shared Images API Tests', () => {
     describe('Share images with user', () => {
         it('Should share an image with one user', async () => {
             try {
-                const images: string = await httpClient.get('/users/' + user1 + '/images').toPromise();
+                const images: string = await httpClient.get('users/' + user1 + '/images').toPromise();
                 assert.isAtLeast(JSON.parse(images).length, 1, 'No images were found for user');
 
                 const imageId = JSON.parse(images)[0].imageId;
 
-                await httpClient.post('/users/' + user1 + '/friends/' + user2 + '/images', [{
-                    imageId: imageId
-                }]);
+                await httpClient.post('users/' + user1 + '/friends/' + user2 + '/images', [imageId]);
             } catch (error) {
                 console.log('\n\n--------------------\n\n');
                 console.error('Error is: ', error);
@@ -89,25 +87,24 @@ describe('Shared Images API Tests', () => {
 
         it('Should fail to share already shared image', async () => {
             try {
-                const images: string = await httpClient.get('/users/' + user1 + '/images').toPromise();
+                const images: string = await httpClient.get('users/' + user1 + '/images').toPromise();
                 assert.isAtLeast(JSON.parse(images).length, 1, 'No images were found for user');
 
                 const imageId = JSON.parse(images)[0].imageId;
 
-                await httpClient.post('/users/' + user1 + '/friends/' + user2 + '/images', [{
-                    imageId: imageId
-                }]);
+                await httpClient.post('users/' + user1 + '/friends/' + user2 + '/images', [imageId]);
                 assert.fail('Test failed - success returned where request should have failed');
             } catch (error) {
+                if (error.AssertionError) {
+                    throw error;
+                }
                 console.error('Error is: ', error, ' which is expected');
             }
         });
 
         it('Should fail to share image that doesnt exist', async () => {
             try {
-                await httpClient.post('/users/' + user1 + '/friends/' + user2 + '/images', [{
-                    imageId: 'junkvalues'
-                }]);
+                await httpClient.post('users/' + user1 + '/friends/' + user2 + '/images', ['junkvalues']);
                 assert.fail('Test failed - success returned where request should have failed');
             } catch (error) {
                 console.error('Error is: ', error, ' which is expected');
@@ -118,7 +115,7 @@ describe('Shared Images API Tests', () => {
     describe('Get Shared images with user', () => {
         it('Should get all images shared with one user', async () => {
             try {
-                const images = await httpClient.getSimpleFiltered('/users/' + user1 + '/images', 'sharedWith', user2).toPromise();
+                const images = await httpClient.getSimpleFiltered('users/' + user1 + '/images', 'sharedWith', user2).toPromise();
                 assert.isDefined(images);
                 assert.equal(JSON.parse(images).length, 1, 'Wrong number of images found');
             } catch (error) {
@@ -131,7 +128,7 @@ describe('Shared Images API Tests', () => {
 
         it('Should get all images shared by one user', async () => {
             try {
-                const images = await httpClient.getSimpleFiltered('/users/' + user2 + '/images', 'sharedBy', user2).toPromise();
+                const images = await httpClient.getSimpleFiltered('users/' + user2 + '/images', 'sharedBy', user2).toPromise();
                 assert.isDefined(images);
                 assert.equal(JSON.parse(images).length, 1, 'Wrong number of images found');
             } catch (error) {
@@ -144,7 +141,7 @@ describe('Shared Images API Tests', () => {
 
         it('Should return zero images shared with user', async () => {
             try {
-                const images = await httpClient.getSimpleFiltered('/users/' + user1 + '/images', 'sharedWith', user3).toPromise();
+                const images = await httpClient.getSimpleFiltered('users/' + user1 + '/images', 'sharedWith', user3).toPromise();
                 assert.isDefined(images);
                 assert.equal(JSON.parse(images).length, 0, 'Wrong number of images found');
             } catch (error) {
@@ -157,7 +154,7 @@ describe('Shared Images API Tests', () => {
 
         it('Should return zero images shared by user', async () => {
             try {
-                const images = await httpClient.getSimpleFiltered('/users/' + user1 + '/images', 'sharedBy', user3).toPromise();
+                const images = await httpClient.getSimpleFiltered('users/' + user1 + '/images', 'sharedBy', user3).toPromise();
                 assert.isDefined(images);
                 assert.equal(JSON.parse(images).length, 0, 'Wrong number of images found');
             } catch (error) {
@@ -174,11 +171,11 @@ describe('Shared Images API Tests', () => {
 
         it('Should unshare an image', async () => {
             try {
-                const images: string = await httpClient.getSimpleFiltered('/users/' + user1 + '/images', 'sharedWith', user2).toPromise();
+                const images: string = await httpClient.getSimpleFiltered('users/' + user1 + '/images', 'sharedWith', user2).toPromise();
                 assert.isDefined(images);
                 assert.equal(JSON.parse(images).length, 1, 'Wrong number of images found');
                 imageId = JSON.parse(images[0]).imageId;
-                await httpClient.delete('/users/' + user1 + '/friends/' + user2 + '/images', imageId);
+                await httpClient.delete('users/' + user1 + '/friends/' + user2 + '/images', imageId);
             } catch (error) {
                 console.log('\n\n--------------------\n\n');
                 console.error('Error is: ', error);
@@ -189,18 +186,19 @@ describe('Shared Images API Tests', () => {
 
         it('Should fail to unshare an image that is already unshared', async () => {
             try {
-                await httpClient.delete('/users/' + user1 + '/friends/' + user2 + '/images', imageId);
+                await httpClient.delete('users/' + user1 + '/friends/' + user2 + '/images', imageId).toPromise();
                 console.log('\n\n--------------------\n\n');
                 assert.fail('Successfully unshared image that is already unshared, which is wrong');
                 console.log('\n\n--------------------\n\n');
             } catch (error) {
                 console.error('Error is: ', error, ' which is expected');
+                throw error;
             }
         });
 
         it('Should fail to unshare an image that doesnt exist', async () => {
             try {
-                await httpClient.delete('/users/' + user1 + '/friends/' + user2 + '/images', 'junk');
+                await httpClient.delete('users/' + user1 + '/friends/' + user2 + '/images', 'junk');
                 console.log('\n\n--------------------\n\n');
                 assert.fail('Successfully unshared image that doesnt exist, which is wrong');
                 console.log('\n\n--------------------\n\n');
@@ -213,21 +211,21 @@ describe('Shared Images API Tests', () => {
         it('Should fail to unshare an image that doesnt belong to user', async () => {
             try {
 
-                const images: string = await httpClient.get('/users/' + user2 + '/images').toPromise();
+                const images: string = await httpClient.get('users/' + user2 + '/images').toPromise();
                 assert.isAtLeast(JSON.parse(images).length, 1, 'No images were found for user');
 
                 let imageId = JSON.parse(images)[0].imageId;
 
-                await httpClient.post('/users/' + user2 + '/friends/' + user3 + '/images', [{
+                await httpClient.post('users/' + user2 + '/friends/' + user3 + '/images', [{
                     imageId: imageId
                 }]);
 
-                const shImgs: string = await httpClient.getSimpleFiltered('/users/' + user2 + '/images', 'sharedWith', user3).toPromise();
+                const shImgs: string = await httpClient.getSimpleFiltered('users/' + user2 + '/images', 'sharedWith', user3).toPromise();
                 assert.isDefined(shImgs);
                 assert.equal(JSON.parse(shImgs).length, 1, 'Wrong number of images found');
 
                 imageId = JSON.parse(shImgs[0]).imageId;
-                await httpClient.delete('/users/' + user1 + '/friends/' + user3 + '/images', 'junk');
+                await httpClient.delete('users/' + user1 + '/friends/' + user3 + '/images', 'junk');
                 console.log('\n\n--------------------\n\n');
                 assert.fail('Successfully unshared image that doesnt belong to user, which is wrong');
                 console.log('\n\n--------------------\n\n');

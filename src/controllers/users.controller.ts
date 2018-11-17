@@ -1,8 +1,8 @@
 
 // Import only what we need from express
-import { User, CustomError, UserCreateRequest, Friends } from '../model';
+import { User, CustomError, UserCreateRequest, Friends, ImageDetails } from '../model';
 import { Route, Get, Post, Body, Query, SuccessResponse, Response, Controller, Delete } from 'tsoa';
-import { UserManager } from '../service';
+import { UserManager, ImageManager } from '../service';
 
 @Route('users')
 export class UserController extends Controller {
@@ -73,6 +73,10 @@ export class UserController extends Controller {
         }
     }
 
+    /**
+     * Get other users who are friends with the current user
+     * @param id the display name of the user
+     */
     @Response('500', 'Internal server error')
     @Response('404', 'The specified user was not found')
     @SuccessResponse('200', 'List of friends for the user')
@@ -93,14 +97,37 @@ export class UserController extends Controller {
         }
     }
 
+    /**
+     * Unfriend the two users. Any images shared b/w the users are removed first.
+     * @param user1 the user invoking the request
+     * @param user2 the user to unfriend
+     */
     @Response('500', 'Internal server error')
     @Response('404', 'The specified user was not found')
-    @SuccessResponse('200', 'List of friends for the user')
+    @SuccessResponse('200', 'Unfriend the two users')
     @Delete('{user1}/friends/{user2}')
     public async unfriendUsers(user1: string, user2: string): Promise<void> {
         try {
             await this.getUser(user1); // Checks to see if user exists
             await this.getUser(user2); // Checks to see if user exists
+
+            // Unshare any images
+            const sharedWithImages: ImageDetails[] = [];
+            const sharedByImages: ImageDetails[] = [];
+            sharedWithImages.concat(await this.imageManager.getImagesSharedWithUser(user1, user2).toPromise());
+            sharedByImages.concat(await this.imageManager.getImagesSharedByUser(user1, user2).toPromise());
+
+            // Unshare all the images
+            const promises: Promise<void>[] = [];
+            sharedWithImages.forEach(image => {
+                promises.push(this.imageManager.unshareImageWithUser(user1, user2, image.imageId ? image.imageId : '').toPromise());
+            });
+
+            sharedByImages.forEach(image => {
+                promises.push(this.imageManager.unshareImageWithUser(user2, user1, image.imageId ? image.imageId : '').toPromise());
+            });
+
+            await Promise.all(promises);
 
             await this.userManager.unfriendUsers(user1, user2).toPromise();
         } catch (error) {
@@ -116,4 +143,5 @@ export class UserController extends Controller {
     }
 
     private userManager: UserManager = new UserManager();
+    private imageManager: ImageManager = new ImageManager();
 }

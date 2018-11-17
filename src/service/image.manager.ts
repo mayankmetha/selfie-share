@@ -2,8 +2,10 @@ import { ImageDetails, SharedImage } from '../model/images.model';
 import * as shortid from 'shortid';
 import * as mysql from 'mysql2';
 import { Connection, RowDataPacket } from 'mysql2';
-import { Observable, Observer } from 'rxjs';
+import { Observable, Observer, forkJoin } from 'rxjs';
 import { DbConnection } from './db.connection';
+import { async } from 'rxjs/internal/scheduler/async';
+import { promises } from 'fs';
 
 export class ImageManager {
 
@@ -59,14 +61,15 @@ export class ImageManager {
 
         return new Observable<string>((observer: Observer<string>) => {
             try {
-                this.dbConnection.getConnection().query('DELETE FROM images WHERE userId=(?) AND imageId=(?)', [userId, imageId],
-                    (error, data) => {
+                this.dbConnection.getConnection()
+                    .query('DELETE FROM images WHERE userId=(?) AND imageId=(?)', [userId, imageId],
+                        (error, data) => {
 
-                        if (error) {
-                            console.log("Query failed: ", error);
-                            throw error;
-                        }
-                    });
+                            if (error) {
+                                console.log("Query failed: ", error);
+                                throw error;
+                            }
+                        });
 
                 console.log('User ', userId, ' deleted image: ', imageId);
                 observer.next(userId);
@@ -77,6 +80,39 @@ export class ImageManager {
         });
     }
 
+    public getUsersWithWhomImageHasBeenShared(userId: string, imageId: string): Observable<string[]> {
+        return new Observable<string[]>((observer: Observer<string[]>) => {
+            if (!userId || userId === '') {
+                observer.error('Invalid: The user id cannot be empty');
+                return;
+            }
+
+            if (!imageId || imageId === '') {
+                observer.error('Invalid: ImageId is required');
+                return;
+            }
+
+            this.dbConnection.getConnection()
+                .query('SELECT * FROM shared_images WHERE imageId = ? AND sharedBy = ?', [imageId, userId],
+                    (error, result: mysql.RowDataPacket[]) => {
+                        if (error) {
+                            console.error('Failed to get list of users: ', error);
+                            observer.error('Failed to get list of users: ' + error.message);
+                            return;
+                        }
+
+                        const userIds: string[] = [];
+                        result.forEach(result => {
+                            userIds.push(result.sharedWith);
+                        });
+                        console.log('The image ', imageId, ' has been shared with users: ', userIds);
+
+                        observer.next(userIds);
+                        observer.complete();
+                    });
+        })
+    }
+
     public getAllImages(userId: string): Observable<ImageDetails[]> {
         if (!userId || userId === '') {
             throw 'UserId is required to retrive image';
@@ -84,7 +120,7 @@ export class ImageManager {
 
         return new Observable<ImageDetails[]>((observer: Observer<ImageDetails[]>) => {
             try {
-                this.dbConnection.getConnection().query('SELECT * FROM images WHERE userid=(?)', [userId],
+                this.dbConnection.getConnection().query('SELECT * FROM images WHERE userId=(?)', [userId],
                     (error, data: mysql.RowDataPacket[]) => {
                         if (error) {
                             throw error;
@@ -111,36 +147,243 @@ export class ImageManager {
 
     public getImage(imageId: string): Observable<ImageDetails> {
         return new Observable<ImageDetails>((observer: Observer<ImageDetails>) => {
+            if (!imageId || imageId === '') {
+                observer.error('The image id cannot be empty');
+                return;
+            }
+
+            try {
+                this.dbConnection.getConnection().query('SELECT * FROM images WHERE imageId=(?)', imageId,
+                    (error, data: mysql.RowDataPacket[]) => {
+                        if (error) {
+                            console.error('Failed to get image: ', imageId, ': ', error);
+                            observer.error(error.message);
+                            return;
+                        }
+
+                        if (data.length !== 1) {
+                            console.error('Too many or too few images returned: ', data.length);
+                            observer.error('Image not found');
+                            return;
+                        }
+
+                        const image = data[0];
+                        observer.next(<ImageDetails>{
+                            userId: image.userId,
+                            imageId: image.imageId,
+                            imageLoc: image.imageLoc,
+                            tag: image.tag,
+                            imageTime: image.imageTime
+                        });
+                        observer.complete();
+                    });
+            } catch (error) {
+                observer.error(error);
+            }
 
         });
     }
 
-    public getImagesSharedWithUser(displayName: string): Observable<ImageDetails[]> {
+    public getImagesSharedWithUser(owner: string, displayName: string): Observable<ImageDetails[]> {
         return new Observable<ImageDetails[]>((observer: Observer<ImageDetails[]>) => {
+
+            if (!owner || owner === '') {
+                observer.error('Invalid: The user name cannot be empty');
+                return;
+            }
             if (!displayName || displayName === '') {
-                observer.error('The user name cannot be empty');
+                observer.error('Invalid: The user name cannot be empty');
                 return;
             }
 
             // Get all images which have been shared with this user.
-            this.dbConnection.getConnection().query('SELECT * from shared_images WHERE sharedWith = ?', displayName,
-                (error, data: mysql.RowDataPacket[]) => {
-                    if (error) {
-                        console.error('Failed to get images shared with user ', error);
-                        observer.error('Failed to get shared images: ' + error.message);
-                        return;
-                    }
+            this.dbConnection.getConnection()
+                .query('SELECT * from shared_images WHERE sharedBy = ? AND sharedWith = ?', [owner, displayName],
+                    (error, data: mysql.RowDataPacket[]) => {
+                        if (error) {
+                            console.error('Failed to get images shared with user ', error);
+                            observer.error('Failed to get shared images: ' + error.message);
+                            return;
+                        }
 
-                    console.log('Found ', data.length, ' images shared with user ', displayName);
-                    //const imageObs
-                    data.forEach((shImg) => {
+                        console.log('Found ', data.length, ' images shared with user ', displayName);
+                        if (data.length === 0) {
+                            observer.next([]);
+                            observer.complete();
+                        }
 
-                    })
-                });
+                        const imageObs: Observable<ImageDetails>[] = [];
+                        data.forEach((shImg) => {
+                            imageObs.push(this.getImage(shImg.imageId));
+                        });
 
+                        forkJoin(imageObs).subscribe((images: ImageDetails[]) => {
+                            console.log('Found ', images.length, ' images');
+                            observer.next(images);
+                            observer.complete();
+                        }, error => {
+                            observer.error('Failed to fetch images: ' + error);
+                        });
+                    });
         });
     }
 
+    public getImagesSharedByUser(owner: string, displayName: string): Observable<ImageDetails[]> {
+        return new Observable<ImageDetails[]>((observer: Observer<ImageDetails[]>) => {
+
+            if (!owner || owner === '') {
+                observer.error('Invalid: The user name cannot be empty');
+                return;
+            }
+
+            if (!displayName || displayName === '') {
+                observer.error('Invalid: The user name cannot be empty');
+                return;
+            }
+
+            // Get all images which have been shared with this user.
+            this.dbConnection.getConnection()
+                .query('SELECT * from shared_images WHERE sharedBy = ? AND sharedWith = ?', [displayName, owner],
+                    (error, data: mysql.RowDataPacket[]) => {
+                        if (error) {
+                            console.error('Failed to get images shared with user ', error);
+                            observer.error('Failed to get shared images: ' + error.message);
+                            return;
+                        }
+
+                        console.log('Found ', data.length, ' images shared with user ', displayName);
+
+                        if (data.length === 0) {
+                            observer.next([]);
+                            observer.complete();
+                        }
+
+                        const imageObs: Observable<ImageDetails>[] = [];
+                        data.forEach((shImg) => {
+                            imageObs.push(this.getImage(shImg.imageId));
+                        });
+
+                        forkJoin(imageObs).subscribe((images: ImageDetails[]) => {
+                            console.log('Found ', images.length, ' images');
+                            observer.next(images);
+                            observer.complete();
+                        }, error => {
+                            observer.error('Failed to fetch images: ' + error);
+                        });
+                    });
+        });
+    }
+
+    public shareImagesWithUser(owner: string, targetUser: string, imageIds: string[]): Observable<void> {
+        return new Observable<void>((observer: Observer<void>) => {
+
+            if (!owner || owner === '') {
+                observer.error('Invalid: The owner of the image cannot be empty');
+                return;
+            }
+
+            if (!targetUser || targetUser === '') {
+                observer.error('Invalid: The target user cannot be empty');
+                return;
+            }
+
+            if (!imageIds || imageIds.length === 0) {
+                observer.error('Invalid: At least one image is expected');
+                return;
+            }
+
+            // Ensure owner owns each image
+            this.getAllImages(owner).subscribe((images: ImageDetails[]) => {
+                const ownedImages: string[] = [];
+                images.forEach((image: ImageDetails) => {
+                    ownedImages.push(image.imageId ? image.imageId : '');
+                });
+
+                const unownedImages = imageIds.filter(imageId => {
+                    return ownedImages.indexOf(imageId) >= 0;
+                });
+
+                if (unownedImages.length !== 0) {
+                    console.error('Found ', unownedImages.length, ' images which dont belong to user ', owner);
+                    observer.error('Invalid: Found ' + unownedImages.length + ' images which dont belong to user ' + owner);
+                    return;
+                }
+
+                const sharedDate = new Date().getTime();
+                const promises: Promise<void>[] = [];
+                imageIds.forEach((image: string) => {
+                    promises.push(new Promise((resolve, reject) => {
+                        this.dbConnection.getConnection()
+                            .query('INSERT into shared_images values (?,?,?,?)', [image, owner, targetUser, sharedDate],
+                                (error, data) => {
+                                    if (error) {
+                                        console.error('Failed to insert image ', image, ': ', error);
+                                        reject('Failed to insert image ' + image + ': ' + error.message);
+                                        return;
+                                    }
+                                    resolve();
+                                });
+                    }));
+                });
+
+                Promise.all(promises)
+                    .then(() => {
+                        observer.next(undefined);
+                        observer.complete();
+                    })
+                    .catch(error => {
+                        observer.error(error);
+                    });
+            }, error => {
+                console.error('Error fetching images for user: ', error);
+                observer.error(error);
+            });
+        });
+    }
+
+    public unshareImageWithUser(owner: string, targetUser: string, imageId: string): Observable<void> {
+        return new Observable<void>((observer: Observer<void>) => {
+            if (!owner || owner === '') {
+                observer.error('Invalid: The owner of the image cannot be empty');
+                return;
+            }
+
+            if (!targetUser || targetUser === '') {
+                observer.error('Invalid: The target user cannot be empty');
+                return;
+            }
+
+            if (!imageId || imageId.length === 0) {
+                observer.error('Invalid: Image Id is invalid');
+                return;
+            }
+
+            this.getImage(imageId).subscribe((image: ImageDetails) => {
+                if (image.userId !== owner) {
+                    console.error('User ', owner, ' does not own image ', imageId);
+                    observer.error('User ' + owner + ' does not own image ' + imageId);
+                    return;
+                }
+
+                this.dbConnection.getConnection()
+                    .query('DELETE FROM shared_images where imageId = ? AND sharedBy = ? AND sharedWith = ?',
+                        [imageId, owner, targetUser],
+                        (error, data) => {
+                            if (error) {
+                                console.error('Failed to unshare image: ', error);
+                                observer.error('Failed to unshare image: ' + error.message);
+                                return;
+                            }
+
+                            observer.next(undefined);
+                            observer.complete();
+                        });
+            }, error => {
+                console.error('Failed to get image ', imageId, ': ', error);
+                observer.error('Failed to get image ' + imageId + ': ' + error);
+            });
+        });
+    }
 
 
     private dbConnection: DbConnection = new DbConnection();
