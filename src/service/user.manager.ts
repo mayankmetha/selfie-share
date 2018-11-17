@@ -2,18 +2,12 @@ import { User, UserCreateRequest, Friends } from '../model';
 import * as mysql from 'mysql2';
 import { Connection } from 'mysql2';
 import { Observable, Observer } from 'rxjs';
-import * as fs from 'fs';
+import { DbConnection } from './db.connection';
 
 export class UserManager {
 
     public constructor() {
-        this.dbConfig = JSON.parse(fs.readFileSync(__dirname + '/../dbconfig.json', 'UTF-8'));
-        this.connection = mysql.createConnection(<mysql.ConnectionOptions>{
-            host: this.dbConfig.host,
-            user: this.dbConfig.user,
-            password: this.dbConfig.password,
-            database: this.dbConfig.database
-        });
+        this.dbConnection = new DbConnection();
     }
 
     /**
@@ -44,7 +38,7 @@ export class UserManager {
                 observer.error('Username already exists');
                 return;
             }, error => {
-                this.connection.query('INSERT INTO users values (?,?,?,?,?,?,?)',
+                this.dbConnection.getConnection().query('INSERT INTO users values (?,?,?,?,?,?,?)',
                     [user.displayName, user.email, user.profilePicUrl, user.profession, user.description, user.age, 0],
                     (error) => {
                         if (error) {
@@ -61,7 +55,7 @@ export class UserManager {
 
     public getAllUsers(displayName?: string): Observable<User[]> {
         return new Observable<User[]>((observer: Observer<User[]>) => {
-            this.connection.query('SELECT * FROM users', (error, data: mysql.RowDataPacket[]) => {
+            this.dbConnection.getConnection().query('SELECT * FROM users', (error, data: mysql.RowDataPacket[]) => {
                 if (error) {
                     observer.error(error.message);
                     return;
@@ -102,7 +96,7 @@ export class UserManager {
 
     public getUser(displayName: string): Observable<User> {
         return new Observable<User>((observer: Observer<User>) => {
-            this.connection.query('SELECT * FROM users WHERE displayName = ?', displayName,
+            this.dbConnection.getConnection().query('SELECT * FROM users WHERE displayName = ?', displayName,
                 (error, data: mysql.RowDataPacket[]) => {
                     if (error) {
                         console.log('Returning error');
@@ -142,7 +136,7 @@ export class UserManager {
             if (!displayName || displayName === '') {
                 observer.error('The user name cannot be empty');
             } else {
-                this.connection.query('DELETE FROM users WHERE displayName = ?', displayName, (error, data) => {
+                this.dbConnection.getConnection().query('DELETE FROM users WHERE displayName = ?', displayName, (error, data) => {
                     if (error) {
                         console.error('Failed to delete user ', displayName, ': ', error);
                         observer.error(error.message);
@@ -158,7 +152,7 @@ export class UserManager {
 
     private async getNumFriendsForUser(user: string): Promise<number> {
         return new Promise<number>((resolve, reject) => {
-            this.connection.query('SELECT COUNT(*) FROM friends where peer1 = ? OR peer2 = ?',
+            this.dbConnection.getConnection().query('SELECT COUNT(*) FROM friends where peer1 = ? OR peer2 = ?',
                 [user, user], (error, data: mysql.RowDataPacket[]) => {
                     if (error) {
                         reject('Failed to find friends of user: ' + error.message);
@@ -173,7 +167,7 @@ export class UserManager {
         return new Observable<Friends[]>((observer: Observer<Friends[]>) => {
             // Check if user exists
             this.getUser(displayName).subscribe((user: User) => {
-                this.connection.query('SELECT * from friends where peer1 = ? OR peer2 = ?'
+                this.dbConnection.getConnection().query('SELECT * from friends where peer1 = ? OR peer2 = ?'
                     , [displayName, displayName], (error, data: mysql.RowDataPacket[]) => {
                         if (error) {
                             console.error('Failed to get friends of user ' + displayName + ': ' + error);
@@ -185,6 +179,7 @@ export class UserManager {
                         const friends: Friends[] = [];
                         data.forEach(friend => {
                             friends.push(<Friends>{
+                                friendId: friend.friendId,
                                 peer1: friend.peer1,
                                 peer2: friend.peer2,
                                 friendshipDate: this.getFormattedDate(friend.friendshipDate)
@@ -219,7 +214,7 @@ export class UserManager {
                     return;
                 }
 
-                this.connection
+                this.dbConnection.getConnection()
                     .query('DELETE FROM friends where (peer1 = ? AND peer2 = ?) OR (peer1 = ? AND peer2 = ?)',
                         [user1, user2, user2, user1], (error, data) => {
                             if (error) {
@@ -243,6 +238,5 @@ export class UserManager {
         return date.toDateString();
     }
 
-    private dbConfig: any = {};
-    private connection: Connection;
+    private dbConnection: DbConnection;
 }

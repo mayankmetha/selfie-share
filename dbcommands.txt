@@ -41,8 +41,9 @@ create table friends (
   peer1 varchar(256) not null,
   peer2 varchar(256) not null,
   friendshipDate varchar(128) not null,
+  friendId varchar(256) PRIMARY KEY,
 
-  PRIMARY KEY (peer1, peer2),
+  UNIQUE (peer1, peer2),
   FOREIGN KEY (peer1) references users(displayName) ON UPDATE CASCADE,
   FOREIGN KEY (peer2) references users(displayName) ON UPDATE CASCADE
 );
