@@ -1,14 +1,16 @@
 import { ImageDetails, SharedImage } from '../model/images.model';
 import * as shortid from 'shortid';
 import * as mysql from 'mysql2';
-import { Connection, RowDataPacket } from 'mysql2';
 import { Observable, Observer, forkJoin } from 'rxjs';
 import { DbConnection } from './db.connection';
-import { async } from 'rxjs/internal/scheduler/async';
-import { promises } from 'fs';
+import { AWS } from './aws.service';
 
 export class ImageManager {
 
+    public constructor() {
+        this.dbConnection = new DbConnection();
+        this.awsInstance = new AWS();
+    }
     /**
      * Inserts an image into the DB. If the image exists, throws an error.
      * Returns a unique id for the image.
@@ -29,6 +31,10 @@ export class ImageManager {
 
         return new Observable<string>((observer: Observer<string>) => {
             image.imageId = shortid.generate();
+            image.imageLoc = this.awsInstance.S3UploadFile(image.imageLoc,image.userId,image.imageId);
+            if (!image.imageLoc || image.imageLoc == '') {
+                throw 'Image upload failed';
+            }
             try {
                 image.imageTime = (new Date).getTime();
                 this.dbConnection.getConnection().query('INSERT INTO images values (?,?,?,?,?)',
@@ -60,6 +66,10 @@ export class ImageManager {
         }
 
         return new Observable<string>((observer: Observer<string>) => {
+            const status = this.awsInstance.S3DeleteFile(userId+'_'+imageId);
+            if(!status) {
+                throw 'File deletion failed';
+            }
             try {
                 this.dbConnection.getConnection()
                     .query('DELETE FROM images WHERE userId=(?) AND imageId=(?)', [userId, imageId],
@@ -385,6 +395,6 @@ export class ImageManager {
         });
     }
 
-
-    private dbConnection: DbConnection = new DbConnection();
+    private dbConnection: DbConnection;
+    private awsInstance: AWS;
 }
