@@ -4,6 +4,7 @@ import { createReadStream } from 'fs';
 
 export class AWS {
     public constructor() {
+        //add config details to awsconfig.json
         config.loadFromPath(join(__dirname+'/../../awsconfig.json'));
         this.s3 = new S3({apiVersion: '2006-03-01'});
         //add bucket name here

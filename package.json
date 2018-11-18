@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "build": "rm -r build; tsoa swagger && tsoa routes && tsc && cp src/dbconfig.json build/src",
+    "build": "rm -r build; tsoa swagger && tsoa routes && tsc && cp src/*config.json build/src",
     "simple-start": "tsc && npm start",
     "start": "node build/src/server.js",
     "dev": "concurrent \"tsc --watch\" \"nodemon build/server.js\"",
