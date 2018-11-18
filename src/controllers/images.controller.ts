@@ -57,28 +57,32 @@ export class ImageController extends Controller {
     @SuccessResponse('201', 'Created')
     @Post('users/{userId}/images')
     public async uploadImage(@Request() request: express.Request, userId: string): Promise<void> {
-        try {
-            const singleFile = multer({ storage: this.multerDiskStorage }).single('imageFile');
-            //@ts-ignore
-            singleFile(request, undefined, async (err: string) => {
-                if (err) {
-                    console.log(err);
-                    throw new CustomError(500, 'Failed to upload file: ' + err);
-                }
+        return new Promise<void>((resolve) => {
+            try {
+                const singleFile = multer({ storage: this.multerDiskStorage }).single('imageFile');
+                //@ts-ignore
+                singleFile(request, undefined, async (err: string) => {
+                    if (err) {
+                        console.log(err);
+                        throw new CustomError(500, 'Failed to upload file: ' + err);
+                    }
 
-                const imageDetails = <ImageDetails>{
-                    userId: userId,
-                    imageLoc: __dirname + '/../../tmpImages/' + request.file.filename,
-                    imageTime: new Date().getTime()
-                };
-                var data = await this.imageManager.createImage(imageDetails).toPromise();
-                this.setStatus(201);
-            });
-        } catch (error) {
-            console.error('Failed to upload image: ', error);
-            this.setStatus(500);
-            throw new CustomError(500, error);
-        }
+                    const imageDetails = <ImageDetails>{
+                        userId: userId,
+                        imageLoc: __dirname + '/../../tmpImages/' + request.file.filename,
+                        imageTime: new Date().getTime()
+                    };
+
+                    var data = await this.imageManager.createImage(imageDetails).toPromise();
+                    this.setStatus(201);
+                    resolve();
+                });
+            } catch (error) {
+                console.error('Failed to upload image: ', error);
+                this.setStatus(500);
+                throw new CustomError(500, error);
+            }
+        });
     }
 
     @Response('500', 'Internal Server Error, when fails to connect to the DB')

@@ -3,13 +3,14 @@ import * as shortid from 'shortid';
 import * as mysql from 'mysql2';
 import { Observable, Observer, forkJoin } from 'rxjs';
 import { DbConnection } from './db.connection';
-//import { AWS } from './aws.service';
+import { AWS } from './aws.service';
+import * as fs from 'fs';
 
 export class ImageManager {
 
     public constructor() {
         this.dbConnection = new DbConnection();
-        //this.awsInstance = new AWS();
+        this.awsInstance = new AWS();
     }
     /**
      * Inserts an image into the DB. If the image exists, throws an error.
@@ -32,28 +33,47 @@ export class ImageManager {
         return new Observable<string>((observer: Observer<string>) => {
             const imageId = shortid.generate();
             image.imageId = imageId;
-            //image.imageLoc = this.awsInstance.S3UploadFile(image.imageLoc,image.userId,image.imageId);
-            //if (!image.imageLoc || image.imageLoc == '') {
-            //    throw 'Image upload failed';
-            //}
-            try {
-                image.imageTime = (new Date).getTime();
-                this.dbConnection.getConnection().query('INSERT INTO images values (?,?,?,?,?)',
-                    [image.userId, image.imageId, image.imageLoc, image.tag, image.imageTime],
-                    (error, data) => {
-                        if (error) {
-                            console.log("Query failed: ", error);
-                            observer.error('Query failed: ' + error.message);
-                            return;
-                        }
+            this.awsInstance.S3UploadFile(image.imageLoc, image.userId, image.imageId)
+                .then((imageLoc: string) => {
 
-                        console.log('User ', image.userId, ' created image: ', image.imageId);
-                        observer.next(imageId);
-                        observer.complete();
-                    });
-            } catch (error) {
-                observer.error(error);
-            }
+                    console.log('Uploading to AWS: ', imageLoc);
+                    if (!imageLoc || imageLoc === '') {
+                        observer.error('Image upload failed');
+                        return;
+                    }
+
+                    try {
+                        const fileName = image.imageLoc;
+                        image.imageTime = (new Date).getTime();
+                        image.imageLoc = imageLoc;
+                        this.dbConnection.getConnection().query('INSERT INTO images values (?,?,?,?,?)',
+                            [image.userId, image.imageId, image.imageLoc, image.tag, image.imageTime],
+                            (error, data) => {
+                                if (error) {
+                                    console.log("Query failed: ", error);
+                                    observer.error('Query failed: ' + error.message);
+                                    return;
+                                }
+
+                                console.log('User ', image.userId, ' created image: ', image.imageId);
+                                observer.next(imageId);
+                                observer.complete();
+                            });
+                        fs.unlink(fileName, (err) => {
+                            if (err) {
+                                console.warn('Local file deletion failed: ', err);
+                            }
+                        });
+                    } catch (error) {
+                        observer.error(error);
+                    }
+
+                })
+                .catch(error => {
+                    console.error('Failed to upload the file : ', error);
+                    observer.error('Failed to upload file: ' + error);
+                });
+
         });
     }
 
@@ -397,5 +417,5 @@ export class ImageManager {
     }
 
     private dbConnection: DbConnection;
-    //private awsInstance: AWS;
+    private awsInstance: AWS;
 }
