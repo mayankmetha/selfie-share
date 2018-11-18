@@ -1,10 +1,10 @@
 
 // Import only what we need from express
 import { ImageDetails, CustomError } from '../model';
-import { Route, Get, Post, Body, Query, SuccessResponse, Response, Controller, Delete } from 'tsoa';
+import { Route, Get, Post, Body, Query, SuccessResponse, Request, Response, Controller, Delete } from 'tsoa';
 import { ImageManager } from '../service';
-import request = require('request');
-import { Observable } from 'rxjs';
+import * as express from 'express';
+import multer from 'multer';
 
 @Route()
 export class ImageController extends Controller {
@@ -56,10 +56,24 @@ export class ImageController extends Controller {
     @Response('400', 'If any required fields are missing in the request')
     @SuccessResponse('201', 'Created')
     @Post('users/{userId}/images')
-    public async uploadImage(@Body() requestBody: ImageDetails): Promise<void> {
+    public async uploadImage(@Request() request: express.Request, userId: string): Promise<void> {
         try {
-            var data = await this.imageManager.createImage(requestBody).toPromise();
-            this.setStatus(201);
+            const singleFile = multer({ storage: this.multerDiskStorage }).single('imageFile');
+            //@ts-ignore
+            singleFile(request, undefined, async (err: string) => {
+                if (err) {
+                    console.log(err);
+                    throw new CustomError(500, 'Failed to upload file: ' + err);
+                }
+
+                const imageDetails = <ImageDetails>{
+                    userId: userId,
+                    imageLoc: __dirname + '/../../tmpImages/' + request.file.filename,
+                    imageTime: new Date().getTime()
+                };
+                var data = await this.imageManager.createImage(imageDetails).toPromise();
+                this.setStatus(201);
+            });
         } catch (error) {
             console.error('Failed to upload image: ', error);
             this.setStatus(500);
@@ -166,4 +180,14 @@ export class ImageController extends Controller {
     }
 
     private imageManager: ImageManager = new ImageManager();
+    private multerDiskStorage: multer.StorageEngine = multer.diskStorage({
+        destination: function (req, file, callback) { callback(null, __dirname + '/../../tmpImages'); },
+        filename: function (req: express.Request, file, callback) {
+            if (file) {
+                callback(null, req.url.split('/')[2] + '_' + new Date().getTime() + '_' + file.originalname);
+            } else {
+                callback(new CustomError(500, 'Failed to upload file'), "null");
+            }
+        }
+    });
 }

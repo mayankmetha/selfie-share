@@ -101,7 +101,7 @@ describe('ImagesApiTest', () => {
             imageId = JSON.parse(images)[0].imageId;
             return httpClient.delete('users/user1/images', imageId).toPromise();
         });
-        
+
         it('Should succeed to delete the image', () => {
             return httpClient.delete('users/user1/images', imageId).toPromise();
         });

@@ -30,7 +30,8 @@ export class ImageManager {
         }
 
         return new Observable<string>((observer: Observer<string>) => {
-            image.imageId = shortid.generate();
+            const imageId = shortid.generate();
+            image.imageId = imageId;
             //image.imageLoc = this.awsInstance.S3UploadFile(image.imageLoc,image.userId,image.imageId);
             //if (!image.imageLoc || image.imageLoc == '') {
             //    throw 'Image upload failed';
@@ -40,16 +41,16 @@ export class ImageManager {
                 this.dbConnection.getConnection().query('INSERT INTO images values (?,?,?,?,?)',
                     [image.userId, image.imageId, image.imageLoc, image.tag, image.imageTime],
                     (error, data) => {
-
                         if (error) {
                             console.log("Query failed: ", error);
-                            throw error;
+                            observer.error('Query failed: ' + error.message);
+                            return;
                         }
-                    });
 
-                console.log('User ', image.userId, ' created image: ', image.imageId);
-                observer.next(image.imageId);
-                observer.complete();
+                        console.log('User ', image.userId, ' created image: ', image.imageId);
+                        observer.next(imageId);
+                        observer.complete();
+                    });
             } catch (error) {
                 observer.error(error);
             }
