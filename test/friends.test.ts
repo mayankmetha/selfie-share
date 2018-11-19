@@ -7,6 +7,7 @@ describe('Friends API tests', () => {
 
     const user1 = 'user1';
     const user2 = 'user2';
+    const user3 = 'user3';
     const config = JSON.parse(fs.readFileSync(__dirname + '/config.json', 'UTF-8'));
     const httpClient: HttpClient = new HttpClient(config.serverUrl);
 
@@ -19,22 +20,26 @@ describe('Friends API tests', () => {
 
         return httpClient.post('users', user)
             .toPromise()
-            .catch((err) => {
+            .catch((err: any) => {
                 assert.isNull(err, err);
             });
     }
 
     before(async () => {
         return new Promise(async resolve => {
-            // Create 2 users, 
+            // Create 2 users,
             const userA = await createUser(user1);
             const userB = await createUser(user2);
+            await createUser(user3);
             assert.isNotNull(userA, 'Failed to create user1');
             assert.isNotNull(userB, 'Failed to create user2');
 
             // Create friend request
+            const frId = await httpClient.post('friendrequest', { fromUser: user1, toUser: user2 }).toPromise();
 
             // Accept friend request
+            await httpClient.put('friendrequest', JSON.parse(frId).frId, { action: 'accept' }).toPromise();
+
             resolve();
         });
     });
@@ -44,6 +49,7 @@ describe('Friends API tests', () => {
             // Delete the users
             await httpClient.delete('users', user1).toPromise();
             await httpClient.delete('users', user2).toPromise();
+            await httpClient.delete('users', user3).toPromise();
             resolve();
         });
     });

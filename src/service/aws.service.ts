@@ -19,6 +19,11 @@ export class AWS {
         const key = userid + '_' + imageid;
         const params = { Bucket: this.bucket, Key: key, Body: body };
         return new Promise<string>((resolve, reject) => {
+            if (process.env['LOCAL_ONLY']) {
+                console.log('Read environment variable, not uploading to cloud');
+                resolve('file:///dummy');
+                return;
+            }
             this.s3.upload(params, (err: any, data: any) => {
                 if (err) {
                     console.log("Upload error:", err);

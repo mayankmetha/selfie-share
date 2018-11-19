@@ -88,13 +88,9 @@ export class HttpClient {
         });
     }
 
-    public sendFile(userId: string, relativeUrl: string, fileLocalPath: string, metadata?: any): Observable<any> {
+    public sendFile(relativeUrl: string, fileLocalPath: string): Observable<any> {
         return new Observable<any>((observer: Observer<any>) => {
-            const body = {
-                data: metadata,
-                file: fs.createReadStream(fileLocalPath)
-            };
-            request.post(this.fullUrl(relativeUrl), { formData: body }, (err, res, body) => {
+            const req = request.post(this.fullUrl(relativeUrl), (err, res, body) => {
                 if (this.isFailed(res.statusCode)) {
                     observer.error(err);
                 } else {
@@ -102,6 +98,7 @@ export class HttpClient {
                     observer.complete();
                 }
             });
+            req.form().append('imageFile', fs.createReadStream(fileLocalPath));
         });
     }
 

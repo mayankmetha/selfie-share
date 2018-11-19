@@ -20,38 +20,36 @@ describe('Shared Images API Tests', () => {
 
         return httpClient.post('users', user)
             .toPromise()
-            .catch((err) => {
+            .catch((err: any) => {
                 assert.isNull(err, err);
             });
     }
 
     before('Create Setup', () => {
         return new Promise(async (resolve) => {
-            await createUser(user1);
-            await createUser(user2);
+            const userA = await createUser(user1);
+            const userB = await createUser(user2);
             await createUser(user3);
 
             // Send friend request
 
+            assert.isNotNull(userA, 'Failed to create user1');
+            assert.isNotNull(userB, 'Failed to create user2');
+
+            // Create friend request
+            const frId = await httpClient.post('friendrequest', { fromUser: user1, toUser: user2 }).toPromise();
+
             // Accept friend request
+            await httpClient.put('friendrequest', JSON.parse(frId).frId, { action: 'accept' }).toPromise();
 
             // Upload an image
-            await httpClient.sendFile(user1,
-                'users/' + user1 + '/images', __dirname + '/selfie.share.jpg',
-                <ImageDetails>{
-                    imageLoc: __dirname + '/selfie.share.jpg',
-                    imageTime: (new Date()).getTime(),
-                    userId: user1
-                });
+            await httpClient.sendFile(
+                'users/' + user1 + '/images', __dirname + '/selfie.share.jpg').toPromise();
 
+            await httpClient.sendFile(
+                'users/' + user1 + '/images', __dirname + '/selfie.share.jpg').toPromise();
 
-            await httpClient.sendFile(user2,
-                'users/' + user2 + '/images', __dirname + '/selfie.share.jpg',
-                <ImageDetails>{
-                    imageLoc: __dirname + '/selfie.share.jpg',
-                    imageTime: (new Date()).getTime(),
-                    userId: user2
-                });
+            console.log('2 images uploaded successfully');
             resolve();
         });
     });
