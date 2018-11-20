@@ -2,7 +2,7 @@
 import * as express from 'express';
 import * as bodyParser from 'body-parser';
 
-import { UserController, ImageController } from './controllers'
+import { UserController, ImageController, FriendsController } from './controllers'
 
 // Import WelcomeController from controllers entry point
 // import { WelcomeController } from './controllers';
