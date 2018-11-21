@@ -58,3 +58,15 @@ create table shared_images (
   FOREIGN KEY (sharedBy) references users(displayName) ON UPDATE CASCADE ON DELETE CASCADE,
   FOREIGN KEY (sharedWith) references users(displayName) ON UPDATE CASCADE ON DELETE CASCADE  
 );
+
+create table friendRequest (
+  frId varchar(256) PRIMARY KEY,
+  fromUser varchar(256) not null,
+  toUser varchar(256) not null,
+  dateOfRequest varchar(25) not null,
+
+  UNIQUE (fromUser, toUser),
+  
+  FOREIGN KEY (fromUser) references users(displayName) ON UPDATE CASCADE ON DELETE CASCADE,
+  FOREIGN KEY (toUser) references users(displayName) ON UPDATE CASCADE ON DELETE CASCADE
+);

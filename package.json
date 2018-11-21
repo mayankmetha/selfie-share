@@ -9,7 +9,7 @@
     "dev": "concurrent \"tsc --watch\" \"nodemon build/server.js\"",
     "routes": "tsoa routes",
     "swagger": "tsoa swagger",
-    "test": "bash test.sh || exit 0"
+    "test": "mocha --require ts-node/register --report list test/*.ts || exit 0"
   },
   "author": "",
   "devDependencies": {

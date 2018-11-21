@@ -17,16 +17,16 @@ export class FriendsController extends Controller {
      */
     @Response('404', 'The specified user was not found')
     @Response('500', 'Internal Server Error, when fails to connect to the DB')
-    @SuccessResponse('200', 'List of all available users image') 
+    @SuccessResponse('200', 'List of all available users image')
     @Get('users/{userId}/friendrequest')
-    public async getAllFriendRequest(userId:string)
-         :Promise<frModel[]> {
-       try {
-        const users = await this.frManager.getAllFriendRequest(userId).toPromise();
-        return users;
-          // const frmodel:frModel={dateOfRequest:new Date().getTime(),frId} ;
-          //  return await this.frManager.createFr().toPromise();
-        
+    public async getAllFriendRequest(userId: string)
+        : Promise<frModel[]> {
+        try {
+            const users = await this.frManager.getAllFriendRequest(userId).toPromise();
+            return users;
+            // const frmodel:frModel={dateOfRequest:new Date().getTime(),frId} ;
+            //  return await this.frManager.createFr().toPromise();
+
         } catch (error) {
             let status = 500;
             console.error('Failed to get friendRequests for the user: ', error);
@@ -46,11 +46,12 @@ export class FriendsController extends Controller {
 
     @SuccessResponse('201', 'Created')
     @Post('friendrequest')
-    public async CreateRequest(@Body() requestBody:frBody ): Promise<void> {
+    public async CreateRequest(@Body() requestBody: frBody): Promise<any> {
         try {
-            const frmodel:frModel={dateOfRequest:String(new Date().getTime()),frId:'',fromUser:requestBody.fromUser,toUser:requestBody.toUser} ;
+            const frmodel: frModel = { dateOfRequest: String(new Date().getTime()), frId: '', fromUser: requestBody.fromUser, toUser: requestBody.toUser };
             var data = await this.frManager.createFr(frmodel).toPromise();
             this.setStatus(201);
+            return { 'frId': data };
         } catch (error) {
             console.error('Failed to create friendRequest: ', error);
             this.setStatus(500);
@@ -60,7 +61,7 @@ export class FriendsController extends Controller {
 
     @SuccessResponse('201', 'Created')
     @Put('friendrequest/{frId}')
-    public async acceptFriendRequest(frId:string ): Promise<void> {
+    public async acceptFriendRequest(frId: string): Promise<void> {
         try {
             //const frmodel:frModel={dateOfRequest:String(new Date().getTime()),frId:'',fromUser:requestBody.fromUser,toUser:requestBody.toUser} ;
             var data = await this.frManager.acceptFriendRequest(frId).toPromise();
@@ -72,6 +73,6 @@ export class FriendsController extends Controller {
         }
     }
 
-    
+
     private frManager: frManager = new frManager();
 }

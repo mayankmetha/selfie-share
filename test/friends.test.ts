@@ -38,7 +38,7 @@ describe('Friends API tests', () => {
             const frId = await httpClient.post('friendrequest', { fromUser: user1, toUser: user2 }).toPromise();
 
             // Accept friend request
-            await httpClient.put('friendrequest', JSON.parse(frId).frId, { action: 'accept' }).toPromise();
+            await httpClient.put('friendrequest', frId.frId, "").toPromise();
 
             resolve();
         });

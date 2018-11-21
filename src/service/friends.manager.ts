@@ -44,7 +44,7 @@ export class frManager {
 
     public getAllFriendRequest(toUser: string): Observable<frModel[]> {
         return new Observable<frModel[]>((observer: Observer<frModel[]>) => {
-            this.dbConnection.getConnection().query('SELECT * FROM friendRequest where toUser=(?)', [toUser], (error, data: mysql.RowDataPacket[]) => {
+            this.dbConnection.getConnection().query('SELECT * FROM friendRequest where toUser= ?', [toUser], (error, data: mysql.RowDataPacket[]) => {
                 if (error) {
                     observer.error(error.message);
                     return;
@@ -90,6 +90,7 @@ export class frManager {
                     };
 
 
+                    
                     this.dbConnection.getConnection()
                         .query('DELETE  FROM friendRequest where frId=(?)',
                             [frId], (error, data: mysql.RowDataPacket[]) => {
