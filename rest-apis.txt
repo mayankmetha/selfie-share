@@ -1,0 +1,164 @@
+REST APIs:
+=====================================
+Users APIs:
+Create User - POST /users
+Request body:
+    {
+        displayName: string,
+        email: string,
+        profilePicUrl: string,
+        profession: string,
+        description: string,
+        age: number,
+        password: string,
+    }
+Response: void
+Id is the displayName, needs to be unique (I'll update the code with these, they're not in yet)
+
+Session login: use base64 encoded credentials, as is the norm. don't worry about this now.
+
+Get user details:
+GET /users?displayName=string
+Response: 
+[
+   {
+       displayName: string,
+       email: string,
+       profilePicUrl: string,
+       profession: string,
+       description: string,
+       age: number,
+       numberOfFriends: number
+   }
+]
+
+Get user:
+GET /users/{}
+Response:
+{
+   displayName: string,
+   email: string,
+   profilePicUrl: string,
+   profession: string,
+   description: string,
+   age: number,
+   numberOfFriends: number
+}
+
+========================================
+
+Friend Requests:
+
+Create friend request:
+POST /friendrequest
+Request body:
+{
+   fromUser: string, (displayName)
+   toUser: string (displayName)
+}
+Response:
+{
+    frId: string
+}
+
+Accept Friend request:
+PUT /friendrequest/{}
+Request body:
+{
+    action: "accept"
+}
+
+Reject friend request:
+DELETE /friendrequest/{}
+
+Get all incoming friend requests:
+GET /users/{}/friendrequest
+Response:
+[
+    {
+        frId: string,
+        fromUser: string,
+        toUser: string,
+        dateOfRequest: string (milliseconds since epoch)
+    }
+]
+
+Get all friend requests:
+GET /friendrequest?fromUser={}
+[
+    {
+        frId: string,
+        fromUser: string,
+        toUser: string,
+        dateOfRequest: string (milliseconds since epoch)
+    }
+]
+===========================================
+
+Friends API:
+
+Get all friends for a user:
+GET /users/{}/friends
+Response:
+[
+    {
+        displayName: string
+    }
+]
+
+Unfriend user:
+DELETE /users/{}/friends/{} (display name of target user)
+
+==============================================
+
+Images API:
+
+Upload an image for a user:
+POST /users/{}/images
+Request body:
+{
+    url: string,
+    tags: string (CSV)
+}
+Response:
+{
+    imageId: string
+}
+
+Get all images uploaded by user:
+GET /users/{}/images
+Response:
+[
+    {
+        imageId: string,
+        imageUrl: string,
+        tags: string,
+        dateOfUpload: string (milliseconds since epoch)
+    }
+]
+
+Delete an image:
+DELETE /users/{}/images/{}
+=====================================================
+
+Sharing Images APIs
+Share multiple images with another user:
+POST /users/{}/friends/{}/images
+Request Body:
+[
+    {
+        imageId: string
+    }
+]
+Response: void
+
+Unshare an image from user:
+DELETE /users/{}/friends/{}/images/{}
+
+Get all images for user
+GET /users/{}/images?sharedBy=displayName&sharedWith=displayName
+Response:
+Same as response of GET images
+
+=======================================================
+
