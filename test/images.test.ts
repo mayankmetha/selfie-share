@@ -45,7 +45,10 @@ describe('ImagesApiTest', () => {
                     'users/' + user1 + '/images', __dirname + '/selfie.share.jpg').toPromise();
                 console.log('Successfully uploaded the image');
             } catch (err) {
-                assert.fail('Failed to upload image: ', err);
+                return new Promise(async (resolve) => {
+                    assert.fail('Failed to upload image: ', err);
+                    resolve();
+                });
             }
         });
 
@@ -56,28 +59,37 @@ describe('ImagesApiTest', () => {
                     'users/' + user1 + '/images', __dirname + '/selfie.share.jpg').toPromise();
                 console.log('Successfully uploaded the image');
             } catch (err) {
-                assert.fail('Failed to upload image: ', err);
+                return new Promise(async (resolve) => {
+                    assert.fail('Failed to upload image: ', err);
+                    resolve();
+                });
             }
         });
     });
 
     describe('GET /images test', () => {
         it('Should get list of image', () => {
-            console.log('\tListing images for user1');
-            return httpClient.get('users/user1/images').toPromise().then((data: any) => {
-                assert.isDefined(data);
-                assert.isAbove(JSON.parse(data).length, 0);
-                console.log('\n\n--------------------\n\n');
-                console.log(data);
-                console.log('\n\n--------------------\n\n');
+            return new Promise(async (resolve) => {
+                console.log('\tListing images for user1');
+                return httpClient.get('users/user1/images').toPromise().then((data: any) => {
+                    assert.isDefined(data);
+                    assert.isAbove(JSON.parse(data).length, 0);
+                    console.log('\n\n--------------------\n\n');
+                    console.log(data);
+                    console.log('\n\n--------------------\n\n');
+                });
+                resolve();
             });
         });
 
         it('Should get an empty list', () => {
-            console.log('\tListing images for user2');
-            return httpClient.get('users/user2/images').toPromise().then((data: any) => {
-                assert.isDefined(data);
-                assert.equal(JSON.parse(data).length, 0, 'Error: ' + data.length + ' images returned instead of 0');
+            return new Promise(async (resolve) => {
+                console.log('\tListing images for user2');
+                return httpClient.get('users/user2/images').toPromise().then((data: any) => {
+                    assert.isDefined(data);
+                    assert.equal(JSON.parse(data).length, 0, 'Error: ' + data.length + ' images returned instead of 0');
+                });
+                resolve();
             });
         });
     });
@@ -86,15 +98,21 @@ describe('ImagesApiTest', () => {
         var imageId: string;
 
         it('Should delete an image', async () => {
-            console.log('\tDeleting an images for user1');
-            const images: string = await httpClient.get('users/' + user1 + '/images').toPromise();
-            assert.isAtLeast(JSON.parse(images).length, 1, 'No images were found for user');
-            imageId = JSON.parse(images)[0].imageId;
-            return httpClient.delete('users/user1/images', imageId).toPromise();
+            return new Promise(async (resolve) => {
+                console.log('\tDeleting an images for user1');
+                const images: string = await httpClient.get('users/' + user1 + '/images').toPromise();
+                assert.isAtLeast(JSON.parse(images).length, 1, 'No images were found for user');
+                imageId = JSON.parse(images)[0].imageId;
+                return httpClient.delete('users/user1/images', imageId).toPromise();
+                resolve();
+            });
         });
 
         it('Should fail to delete the image', () => {
-            return httpClient.delete('users/user1/images', imageId).toPromise();
+            return new Promise(async (resolve) => {
+                return httpClient.delete('users/user1/images', imageId).toPromise();
+                resolve();
+            });
         });
     });
 });
