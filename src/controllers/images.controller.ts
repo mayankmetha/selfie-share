@@ -131,10 +131,13 @@ export class ImageController extends Controller {
     @Response('500', 'Internal server error has occurred')
     @SuccessResponse('201', 'Successfully shared the image with the given user')
     @Post('users/{userId}/friends/{targetUser}/images')
-    public async shareImageWithUser(userId: string, targetUser: string, @Body() requestBody: string[]): Promise<void> {
+    public shareImageWithUser(userId: string, targetUser: string, @Body() requestBody: string[]): Promise<void> {
+        return new Promise<void>( async (resolve, reject) => {
         try {
+            console.log('Sharing image ', requestBody, ' with User ', targetUser, ' from user ', userId);
             await this.imageManager.shareImagesWithUser(userId, targetUser, requestBody);
             this.setStatus(201);
+            resolve();
         } catch (error) {
             let status = 500;
             console.error('Failed to share image: ', error);
@@ -148,8 +151,9 @@ export class ImageController extends Controller {
             }
 
             this.setStatus(status);
-            throw new CustomError(status, error);
+            reject(new CustomError(status, error));
         }
+    });
     }
 
     /**

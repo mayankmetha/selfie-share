@@ -78,6 +78,11 @@ export class frManager {
                         observer.error(error.message);
                         return;
                     }
+
+                    if(!data || data.length === 0) {
+                        observer.error('Failed to find friend request id ' + frId);
+                        return;
+                    }
                     let friendrequest: frModel;
 
                     const frmodel = data[0];
@@ -87,8 +92,7 @@ export class frManager {
                         toUser: frmodel.toUser,
                         dateOfRequest: frmodel.dateOfRequest
                     };
-
-
+                    console.log('Successfully deleted existing FR');
 
                     this.dbConnection.getConnection()
                         .query('DELETE  FROM friendRequest where frId=(?)',
@@ -102,7 +106,7 @@ export class frManager {
                                                 observer.error(error.message);
                                                 return;
                                             }
-
+                                            console.log('Successfully created Friend');
 
                                             observer.next(friendrequest.frId);
                                             observer.complete();

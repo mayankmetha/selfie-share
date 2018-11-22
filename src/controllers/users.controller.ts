@@ -1,8 +1,9 @@
 
 // Import only what we need from express
-import { User, CustomError, UserCreateRequest, Friends, ImageDetails } from '../model';
+import { User, CustomError, UserCreateRequest, Friends, ImageDetails, frModel } from '../model';
 import { Route, Get, Post, Body, Query, SuccessResponse, Response, Controller, Delete } from 'tsoa';
 import { UserManager, ImageManager } from '../service';
+import { Observable } from 'rxjs';
 
 @Route('users')
 export class UserController extends Controller {
@@ -65,6 +66,14 @@ export class UserController extends Controller {
         }
 
         try {
+            // Get all friends, and unfriend each one
+            const friends = await this.getFriendsForUser(id);
+            console.log('User ', id, ' has ', friends.length, ' friends');
+            const obs: Promise<void>[] = [];
+            friends.forEach( (friend: Friends) => {
+                obs.push(this.unfriendUsers(friend.peer1, friend.peer2));
+            });
+            await Promise.all(obs);
             await this.userManager.deleteUser(id).toPromise();
         } catch (error) {
             console.error('Failed to delete user: ', error);

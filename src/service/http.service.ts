@@ -77,7 +77,7 @@ export class HttpClient {
 
     public put(relativeUrl: string, id: string, body: any): Observable<any> {
         return new Observable<any>((observer: Observer<any>) => {
-            request.post(this.fullUrl(relativeUrl + '/' + id), { json: body }, (error, response, body) => {
+            request.put(this.fullUrl(relativeUrl + '/' + id), { json: body }, (error, response, body) => {
                 if (this.isFailed(response.statusCode)) {
                     observer.error(error);
                 } else {

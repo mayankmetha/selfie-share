@@ -359,6 +359,7 @@ export class ImageManager {
 
                 Promise.all(promises)
                     .then(() => {
+                        console.log('All images shared!');
                         observer.next(undefined);
                         observer.complete();
                     })
