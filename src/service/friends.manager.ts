@@ -31,11 +31,10 @@ export class frManager {
                             observer.error(error.message);
                             return;
                         }
+                        console.log('friendRequest', friendRequest);
+                        observer.next(friendRequest);
+                        observer.complete();
                     });
-
-                console.log('friendRequest', friendRequest);
-                observer.next(friendRequest);
-                observer.complete();
             } catch (error) {
                 observer.error(error);
             }
@@ -90,7 +89,7 @@ export class frManager {
                     };
 
 
-                    
+
                     this.dbConnection.getConnection()
                         .query('DELETE  FROM friendRequest where frId=(?)',
                             [frId], (error, data: mysql.RowDataPacket[]) => {
