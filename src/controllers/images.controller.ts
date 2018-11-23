@@ -27,10 +27,10 @@ export class ImageController extends Controller {
             if (!sharedBy && !sharedWith) {
                 return await this.imageManager.getAllImages(userId).toPromise();
             } else if (!sharedWith) {
-                return await this.imageManager.getImagesSharedWithUser(userId, sharedBy ? sharedBy : '')
+                return await this.imageManager.getImagesSharedByUser(userId, sharedBy ? sharedBy : '')
                     .toPromise();
             } else if (!sharedBy) {
-                return await this.imageManager.getImagesSharedByUser(userId, sharedWith ? sharedWith : '')
+                return await this.imageManager.getImagesSharedWithUser(userId, sharedWith ? sharedWith : '')
                     .toPromise();
             } else {
                 throw 'Invalid: Both sharedBy and sharedWith cannot be specified';
@@ -131,13 +131,11 @@ export class ImageController extends Controller {
     @Response('500', 'Internal server error has occurred')
     @SuccessResponse('201', 'Successfully shared the image with the given user')
     @Post('users/{userId}/friends/{targetUser}/images')
-    public shareImageWithUser(userId: string, targetUser: string, @Body() requestBody: string[]): Promise<void> {
-        return new Promise<void>( async (resolve, reject) => {
+    public async shareImageWithUser(userId: string, targetUser: string, @Body() requestBody: string[]): Promise<void> {
         try {
             console.log('Sharing image ', requestBody, ' with User ', targetUser, ' from user ', userId);
-            await this.imageManager.shareImagesWithUser(userId, targetUser, requestBody);
+            await this.imageManager.shareImagesWithUser(userId, targetUser, requestBody).toPromise();
             this.setStatus(201);
-            resolve();
         } catch (error) {
             let status = 500;
             console.error('Failed to share image: ', error);
@@ -151,9 +149,8 @@ export class ImageController extends Controller {
             }
 
             this.setStatus(status);
-            reject(new CustomError(status, error));
+            throw new CustomError(status, error);
         }
-    });
     }
 
     /**
@@ -169,10 +166,12 @@ export class ImageController extends Controller {
     @Delete('users/{userId}/friends/{targetUser}/images/{imageId}')
     public async unshareImageWithUser(userId: string, targetUser: string, imageId: string): Promise<void> {
         try {
-            return await this.imageManager.unshareImageWithUser(userId, targetUser, imageId).toPromise();
+            console.log('Unsharing image', imageId, 'Owner is', userId, 'from user', targetUser);
+            await this.imageManager.unshareImageWithUser(userId, targetUser, imageId).toPromise();
+            console.log('Unsharing image successful');
         } catch (error) {
             let status = 500;
-            console.error('Failed to share image: ', error);
+            console.error('Failed to unshare image: ', error);
 
             const tmpError = String(error).toLowerCase();
 

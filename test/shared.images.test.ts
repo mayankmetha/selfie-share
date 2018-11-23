@@ -50,7 +50,7 @@ describe("Shared Images API Tests", () => {
             // Upload an image
             await httpClient.sendFile("users/" + user1 + "/images", __dirname + "/selfie.share.jpg").toPromise();
 
-            await httpClient.sendFile("users/" + user1 + "/images", __dirname + "/selfie.share.jpg").toPromise();
+            await httpClient.sendFile("users/" + user2 + "/images", __dirname + "/selfie.share.jpg").toPromise();
 
             console.log("2 images uploaded successfully");
             resolve();
@@ -139,7 +139,7 @@ describe("Shared Images API Tests", () => {
         it("Should get all images shared by one user", async () => {
             try {
                 const images = await httpClient
-                    .getSimpleFiltered("users/" + user2 + "/images", "sharedBy", user2)
+                    .getSimpleFiltered("users/" + user2 + "/images", "sharedBy", user1)
                     .toPromise();
                 assert.isDefined(images);
                 assert.equal(JSON.parse(images).length, 1, "Wrong number of images found");
@@ -187,12 +187,12 @@ describe("Shared Images API Tests", () => {
 
         it("Should unshare an image", async () => {
             try {
-                const images: string = await httpClient
+                const images = await httpClient
                     .getSimpleFiltered("users/" + user1 + "/images", "sharedWith", user2)
                     .toPromise();
                 assert.isDefined(images);
                 assert.equal(JSON.parse(images).length, 1, "Wrong number of images found");
-                imageId = JSON.parse(images[0]).imageId;
+                imageId = JSON.parse(images)[0].imageId;
                 await httpClient.delete("users/" + user1 + "/friends/" + user2 + "/images", imageId).toPromise();
             } catch (error) {
                 console.log("\n\n--------------------\n\n");
@@ -237,11 +237,7 @@ describe("Shared Images API Tests", () => {
 
                 let imageId = JSON.parse(images)[0].imageId;
 
-                await httpClient.post("users/" + user2 + "/friends/" + user3 + "/images", [
-                    {
-                        imageId: imageId
-                    }
-                ]).toPromise();
+                await httpClient.post("users/" + user2 + "/friends/" + user3 + "/images", [imageId]).toPromise();
 
                 const shImgs: string = await httpClient
                     .getSimpleFiltered("users/" + user2 + "/images", "sharedWith", user3)
@@ -249,7 +245,7 @@ describe("Shared Images API Tests", () => {
                 assert.isDefined(shImgs);
                 assert.equal(JSON.parse(shImgs).length, 1, "Wrong number of images found");
 
-                imageId = JSON.parse(shImgs[0]).imageId;
+                imageId = JSON.parse(shImgs)[0].imageId;
                 await httpClient.delete("users/" + user1 + "/friends/" + user3 + "/images", "junk").toPromise();
                 console.log("\n\n--------------------\n\n");
                 assert.fail("Successfully unshared image that doesnt belong to user, which is wrong");

@@ -84,9 +84,20 @@ describe('UsersApiTests', () => {
                 .toPromise();
         });
 
-        it('Should succeed to delete the user', () => {
-            return httpClient.delete('users', userName)
-                .toPromise();
+        it('Should fail to delete the user', () => {
+            return new Promise(async (resolve, reject) => {
+                try {
+                    await httpClient.delete('users', userName)
+                        .toPromise();
+                    assert.fail('Failed to delete a non-existent user');
+                } catch (error) {
+                    if (String(error).indexOf('AssertionError') >= 0) {
+                        throw error;
+                    }
+                    console.error("Error is: ", error, " which is expected");
+                    resolve();
+                }
+            });
         });
     });
 });

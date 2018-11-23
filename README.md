@@ -2,6 +2,11 @@
 `npm install` //First time only <br>
 `npm run build` <br>
 `npm start` <br>
+To start server in local mode (i.e. no uploads to cloud storage), run <br>
+`LOCAL_ONLY=true npm start`<br><br>
+
+To configure a port, start the server using <br>
+`PORT=<port number> npm start`<br><br>
 
 # to test rest api
 
@@ -13,6 +18,8 @@ Start the server<br>
 Navigate to 'http://localhost:3000/'<br>
 Use the Swagger UI to run any of the REST APIs<br>
 <br>
+OR<br>
+Run the command `npm run test`<br><br>
 Adding new controllers:<br>
 A sample implementation is in the "UserController" controller.<br>
 <br>

@@ -331,7 +331,7 @@ export class ImageManager {
                 });
 
                 const unownedImages = imageIds.filter(imageId => {
-                    return ownedImages.indexOf(imageId) >= 0;
+                    return ownedImages.indexOf(imageId) < 0;
                 });
 
                 if (unownedImages.length !== 0) {
@@ -352,6 +352,7 @@ export class ImageManager {
                                         reject('Failed to insert image ' + image + ': ' + error.message);
                                         return;
                                     }
+                                    console.log('Successfully shared image ', image, ' with user ', targetUser, ' for owner ', owner);
                                     resolve();
                                 });
                     }));
@@ -364,6 +365,7 @@ export class ImageManager {
                         observer.complete();
                     })
                     .catch(error => {
+                        console.error('Failed to share some images: ', error);
                         observer.error(error);
                     });
             }, error => {
@@ -390,10 +392,20 @@ export class ImageManager {
                 return;
             }
 
-            this.getImage(imageId).subscribe((image: ImageDetails) => {
+            this.getImage(imageId).subscribe(async (image: ImageDetails) => {
                 if (image.userId !== owner) {
                     console.error('User ', owner, ' does not own image ', imageId);
                     observer.error('User ' + owner + ' does not own image ' + imageId);
+                    return;
+                }
+
+                const shared: ImageDetails[] = await this.getImagesSharedWithUser(owner, targetUser).toPromise();
+                const isShared = shared.filter(tmpImg => {
+                    return tmpImg.imageId === imageId;
+                });
+
+                if(isShared.length === 0) {
+                    observer.error('The image is not shared between the users');
                     return;
                 }
 
