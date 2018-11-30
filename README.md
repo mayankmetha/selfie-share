@@ -42,3 +42,30 @@ References used:<br>
 https://dev.to/briandgls/using-typescript-with-express--e0k<br>
 https://www.rajram.net/node-101-part-4-auto-generate-and-register-routes-in-node-for-web-apis-2/<br>
 https://www.rajram.net/node-101-part-5-auto-generate-swagger-for-your-web-api-and-use-swaggerui-to-try-it-out/<br>
+
+
+# RELEASE 2: Docker containers <br>
+<br>
+# Instructions <br>
+Build the docker image: Navigate to the source code location, and run `sudo docker build -t fsc/selfie-share .`<br>
+Setup bridge network: `docker network create docker-bridge` <br>
+Configure Docker bridge network: `docker create --name fsc-bridge-nw --network docker-bridge --publish 3000:3000` <br>
+
+# NOTE: Port can be changed as needed, as can the names given to the network and the container <br>
+
+Start the docker container: `sudo docker run -d fsc/selfie-share --name selfie-share` <br>
+Connect the docker container to the bridge network: `sudo docker network connect docker-bridge selfie-share` <br>
+Get the IP address of the container running the application: `sudo docker network inspect docker-bridge` <br>
+
+You can open the Swagger page by navigating to that IP <br>
+<br>
+List running containers: `sudo docker ps` <br>
+Stopping the container: `sudo docker stop selfie-share` <br>
+Remove the container: `sudo docker rm selfie-share` <br>
+
+<br>
+References:
+Installing docker container engine on Ubuntu: https://docs.docker.com/install/linux/docker-ce/ubuntu/<br>
+Creating a docker container for a NodeJS application: https://nodejs.org/en/docs/guides/nodejs-docker-webapp/ <br>
+Creating a bridge network to expose a running docker container port: https://docs.docker.com/network/bridge/#connect-a-container-to-a-user-defined-bridge <br>
+<br>
