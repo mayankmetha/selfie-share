@@ -1,5 +1,5 @@
 # to start server
-`npm install` //First time only <br>
+`npm install` //First time only, from the web-role and web-worker folder <br>
 To start the Web Role REST server, run `cd web-role` <br>
 `npm run build` <br>
 `npm start` <br>
@@ -50,11 +50,29 @@ https://www.rajram.net/node-101-part-5-auto-generate-swagger-for-your-web-api-an
 # RELEASE 2: Docker containers <br>
 <br>
 # Instructions <br>
+<br>
+Installing mysql container: <br>
+`sudo docker pull mysql/mysql-server:5.7` <br>
+Start the mysql container: NOTE: Keep the container name the same, it is used as a config parameter <br>
+`sudo docker run --name=mysql -d mysql/mysql-server:5.7` <br>
+# Setup the mysql DB <br>
+TODO: Automate this <br>
+MySQL auto generates a password. Find it by running `sudo docker logs mysql1 2>&1 | grep GENERATED` <br>
+Use the password to log into the mysql client: `sudo docker exec -it mysql1 mysql -uroot -p` <br>
+Reset the MySQL password to "password": `ALTER USER 'root'@'localhost' IDENTIFIED BY 'password';` <br>
+Run the following commands: <br>
+`CREATE USER 'root'@'%' IDENTIFIED BY 'password';` <br>
+`GRANT ALL PRIVILEGES ON . TO 'root'@'%';` <br>
+`FLUSH PRIVILEGES;` <br>
+Setup the DB schema by running all commands in dbcommands.txt <br>
+
+# Building the container image
 Build the docker image: Navigate to the source code location, and run `sudo docker build -t fsc/selfie-share-webrole .`<br>
 
 # NOTE: Port can be changed as needed, as can the names given to the network and the container <br>
 
-Start the docker container: `sudo docker run -d -p 3000:3000 --name selfie-share fsc/selfie-share-webrole` <br>
+Start the docker container: <br>
+`sudo docker run -d --name selfie-share-webrole -p 3000:3000 --link mysql:mysql fsc/selfie-share-web-role` <br>
 The server should be listening on port 3000 <br>
 
 <br>

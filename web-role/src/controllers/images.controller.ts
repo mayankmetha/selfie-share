@@ -188,7 +188,7 @@ export class ImageController extends Controller {
 
     private imageManager: ImageManager = new ImageManager();
     private multerDiskStorage: multer.StorageEngine = multer.diskStorage({
-        destination: function (req, file, callback) { callback(null, __dirname + '/../../tmpImages'); },
+        destination: function (req, file, callback) { callback(null, __dirname + '/../tmpImages'); },
         filename: function (req: express.Request, file, callback) {
             if (file) {
                 callback(null, req.url.split('/')[2] + '_' + new Date().getTime() + '_' + file.originalname);
