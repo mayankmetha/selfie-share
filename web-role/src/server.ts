@@ -11,7 +11,7 @@ import * as swaggerUI from 'swagger-ui-express';
 import { NextFunction } from 'connect';
 import { CustomError } from './model';
 
-const swaggerJSON = require('../../src/swagger/swagger.json');
+const swaggerJSON = require('./swagger/swagger.json');
 
 // Create a new express application instance
 const app: express.Application = express.default();

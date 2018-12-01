@@ -1,7 +1,7 @@
 import { assert } from "chai";
-import { HttpClient } from "../src/service/http.service";
+import { HttpClient } from "./http.service";
 import * as fs from "fs";
-import { UserCreateRequest, ImageDetails } from "../src/model";
+import { UserCreateRequest, ImageDetails } from "./model";
 
 describe("Shared Images API Tests", () => {
     const config = JSON.parse(fs.readFileSync(__dirname + "/config.json", "UTF-8"));

@@ -1,7 +1,6 @@
 import * as request from 'request';
 import { Observable, Observer } from 'rxjs';
 import * as fs from 'fs';
-import { ImageDetails } from '../model';
 
 export class HttpClient {
     public constructor(baseUrl: string) {

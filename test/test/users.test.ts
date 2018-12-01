@@ -1,6 +1,6 @@
 import { assert } from 'chai';
-import { User, UserCreateRequest } from '../src/model';
-import { HttpClient } from '../src/service/http.service';
+import { User, UserCreateRequest } from './model';
+import { HttpClient } from './http.service';
 import * as fs from 'fs';
 
 describe('UsersApiTests', () => {

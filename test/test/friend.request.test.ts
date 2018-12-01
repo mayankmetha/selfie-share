@@ -1,10 +1,7 @@
 import { assert } from "chai";
-import { HttpClient } from "../src/service/http.service";
+import { HttpClient } from "./http.service";
 import { readFileSync } from "fs";
-import { UserCreateRequest } from "../src/model";
-import { fail, rejects } from "assert";
-import { async } from "rxjs/internal/scheduler/async";
-import { resolve } from "dns";
+import { UserCreateRequest } from "./model";
 
 describe("Friend Requests API tests", () => {
     const user1 = "user1";

@@ -1,5 +1,6 @@
 # to start server
 `npm install` //First time only <br>
+To start the Web Role REST server, run `cd web-role` <br>
 `npm run build` <br>
 `npm start` <br>
 To start server in local mode (i.e. no uploads to cloud storage), run <br>
@@ -27,8 +28,10 @@ Testing:
 <br>
 Uses mocha and chai for tests. Put all test files under the 'test' folder. Example test/users.test.ts. <br>
 Running Tests <br>
-Start the server using `npm start`<br>
-In a different window, run `npm run test`
+Ensure Web-Role server is running <br>
+Navigate to the "test" folder <br>
+If not done, run `npm install` here as well <br>
+Run `npm start`
 <br>
 Known Issues:<br>
 Building sometimes fails with seg fault. Ignore for now. <br>
@@ -47,13 +50,17 @@ https://www.rajram.net/node-101-part-5-auto-generate-swagger-for-your-web-api-an
 # RELEASE 2: Docker containers <br>
 <br>
 # Instructions <br>
-Build the docker image: Navigate to the source code location, and run `sudo docker build -t fsc/selfie-share .`<br>
-Setup bridge network: `docker network create docker-bridge` <br>
-Configure Docker bridge network: `docker create --name fsc-bridge-nw --network docker-bridge --publish 3000:3000` <br>
+Build the docker image: Navigate to the source code location, and run `sudo docker build -t fsc/selfie-share-webrole .`<br>
 
 # NOTE: Port can be changed as needed, as can the names given to the network and the container <br>
 
-Start the docker container: `sudo docker run -d fsc/selfie-share --name selfie-share` <br>
+Start the docker container: `sudo docker run -d -p 3000:3000 --name selfie-share fsc/selfie-share-webrole` <br>
+The server should be listening on port 3000 <br>
+
+<br>
+# Configuring the network
+Setup bridge network: `docker network create docker-bridge` <br>
+Configure Docker bridge network: `docker create --name fsc-bridge-nw --network docker-bridge --publish 3000:3000` <br>
 Connect the docker container to the bridge network: `sudo docker network connect docker-bridge selfie-share` <br>
 Get the IP address of the container running the application: `sudo docker network inspect docker-bridge` <br>
 

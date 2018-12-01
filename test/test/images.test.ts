@@ -1,6 +1,6 @@
 import { assert } from 'chai';
-import { ImageDetails, UserCreateRequest } from '../src/model';
-import { HttpClient } from '../src/service/http.service';
+import { ImageDetails, UserCreateRequest } from './model';
+import { HttpClient } from './http.service';
 import * as fs from 'fs';
 
 describe('ImagesApiTest', () => {
