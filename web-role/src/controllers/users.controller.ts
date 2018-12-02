@@ -1,6 +1,6 @@
 
 // Import only what we need from express
-import { User, CustomError, UserCreateRequest, Friends, ImageDetails, frModel } from '../model';
+import { User, CustomError, UserCreateRequest, Friends, ImageDetails, frModel, ImageNotification } from '../model';
 import { Route, Get, Post, Body, Query, SuccessResponse, Response, Controller, Delete } from 'tsoa';
 import { UserManager, ImageManager } from '../service';
 import { Observable } from 'rxjs';
@@ -70,7 +70,7 @@ export class UserController extends Controller {
             const friends = await this.getFriendsForUser(id);
             console.log('User ', id, ' has ', friends.length, ' friends');
             const obs: Promise<void>[] = [];
-            friends.forEach( (friend: Friends) => {
+            friends.forEach((friend: Friends) => {
                 obs.push(this.unfriendUsers(friend.peer1, friend.peer2));
             });
             await Promise.all(obs);
@@ -148,6 +148,35 @@ export class UserController extends Controller {
 
             this.setStatus(500);
             throw new CustomError(500, error);
+        }
+    }
+
+    /**
+     * Get notifications for a particular user
+     * @param user  user Id
+     */
+    @Response('500', 'Internal server error')
+    @Response('404', 'The specified user was not found')
+    @SuccessResponse('200', 'Notifications for the user, if any')
+    @Get('{user}/notifications')
+    public async getNotifications(user: string): Promise<ImageNotification[]> {
+        try {
+            const notifications: ImageNotification[] = await this.userManager.getNotifications(user).toPromise();
+            return notifications;
+        } catch (error) {
+            let status = 500;
+            console.error("Failed to get notifications for the user: ", error);
+
+            const tmpError = String(error).toLowerCase();
+
+            if (tmpError.indexOf("invalid") >= 0) {
+                status = 400;
+            } else if (tmpError.indexOf("not found") >= 0) {
+                status = 404;
+            }
+
+            this.setStatus(status);
+            throw new CustomError(status, error);
         }
     }
 

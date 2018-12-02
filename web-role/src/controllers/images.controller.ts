@@ -69,7 +69,7 @@ export class ImageController extends Controller {
 
                     const imageDetails = <ImageDetails>{
                         userId: userId,
-                        imageLoc: __dirname + '/../../tmpImages/' + request.file.filename,
+                        imageLoc: __dirname + '/../tmpImages/' + request.file.filename,
                         imageTime: new Date().getTime()
                     };
 

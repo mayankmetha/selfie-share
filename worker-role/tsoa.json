@@ -1,0 +1,10 @@
+{
+    "swagger": {
+        "outputDirectory": "./src/swagger",
+        "entryFile": "./src/server.ts"
+    },
+    "routes": {
+        "entryFile": "./src/server.ts",
+        "routesDir": "./src/routes"
+    }
+}

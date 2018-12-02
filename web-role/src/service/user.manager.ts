@@ -1,4 +1,4 @@
-import { User, UserCreateRequest, Friends } from '../model';
+import { User, UserCreateRequest, Friends, ImageNotification } from '../model';
 import * as mysql from 'mysql2';
 import { Connection } from 'mysql2';
 import { Observable, Observer } from 'rxjs';
@@ -232,6 +232,42 @@ export class UserManager {
                 observer.error('Failed to unfriend users: ' + error);
             })
         })
+    }
+
+    public getNotifications(user: string): Observable<ImageNotification[]> {
+        return new Observable<ImageNotification[]>((observer: Observer<ImageNotification[]>) => {
+            // Check if user exists
+            this.getUser(user).subscribe(data => {
+                console.log('Found user ', user);
+                this.dbConnection.getConnection()
+                    .query('SELECT * from notifications WHERE toUser = ?',
+                        user, (error, data: mysql.RowDataPacket[]) => {
+                            if (error) {
+                                console.error('Failed to get notifications for user: ', error);
+                                observer.error('Failed to get notifications for user: ' + error.message);
+                            } else {
+                                console.log('Found ', data.length, ' notifications for user ', user);
+                                const notifications: ImageNotification[] = [];
+                                data.forEach(notification => {
+                                    // Set peer1 always to current user
+                                    notifications.push(<ImageNotification>{
+                                        date: notification.notificationDate,
+                                        notificationFromUser: notification.fromUser,
+                                        notificationToUser: notification.toUser,
+                                        notificationId: notification.notificationId,
+                                        notificationText: notification.notificationText
+                                    });
+                                });
+
+                                observer.next(notifications);
+                                observer.complete();
+                            }
+                        });
+            }, error => {
+                console.error('Failed to find user: ', user);
+                observer.error('Not Found: Failed to find user: ' + error);
+            });
+        });
     }
 
     private getFormattedDate(millis: string): string {

@@ -70,3 +70,15 @@ create table friendRequest (
   FOREIGN KEY (fromUser) references users(displayName) ON UPDATE CASCADE ON DELETE CASCADE,
   FOREIGN KEY (toUser) references users(displayName) ON UPDATE CASCADE ON DELETE CASCADE
 );
+
+create table notifications (
+  notificationId varchar(256) PRIMARY KEY,
+  fromUser varchar(256) not null,
+  toUser varchar(256) not null,
+  notificationDate varchar(25) not null,
+  notificationText varchar(2048) not null,
+
+  UNIQUE(fromUser, toUser, notificationText),
+  FOREIGN KEY (fromUser) references users(displayName) ON UPDATE CASCADE ON DELETE CASCADE,
+  FOREIGN KEY (toUser) references users(displayName) ON UPDATE CASCADE ON DELETE CASCADE
+);

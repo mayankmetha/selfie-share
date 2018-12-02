@@ -1,17 +1,24 @@
-import { ImageDetails, SharedImage } from '../model/images.model';
+import { ImageDetails, SharedImage, ImageUploadResponse } from '../model/images.model';
 import * as shortid from 'shortid';
 import * as mysql from 'mysql2';
 import { Observable, Observer, forkJoin } from 'rxjs';
 import { DbConnection } from './db.connection';
 import { AWS } from './aws.service';
 import * as fs from 'fs';
+import * as request from 'request';
+import { ServerConfig } from '../model';
 
 export class ImageManager {
 
     public constructor() {
         this.dbConnection = new DbConnection();
-        this.awsInstance = new AWS();
+        const serverConfig = JSON.parse(fs.readFileSync(__dirname + '/../worker-config.json', 'UTF-8'));
+        this.remoteServerConfig = {
+            host: serverConfig.host,
+            port: serverConfig.port
+        };
     }
+
     /**
      * Inserts an image into the DB. If the image exists, throws an error.
      * Returns a unique id for the image.
@@ -33,48 +40,50 @@ export class ImageManager {
         return new Observable<string>((observer: Observer<string>) => {
             const imageId = shortid.generate();
             image.imageId = imageId;
-            this.awsInstance.S3UploadFile(image.imageLoc, image.userId, image.imageId)
-                .then((imageLoc: string) => {
 
-                    console.log('Uploading to AWS: ', imageLoc);
-                    if (!imageLoc || imageLoc === '') {
-                        observer.error('Image upload failed');
-                        return;
-                    }
+            try {
+                image.imageTime = (new Date).getTime();
+                this.dbConnection.getConnection().query('INSERT INTO images values (?,?,?,?,?)',
+                    [image.userId, image.imageId, image.imageLoc, image.tag, image.imageTime],
+                    (error, data) => {
+                        if (error) {
+                            console.log("Query failed: ", error);
+                            observer.error('Query failed: ' + error.message);
+                            return;
+                        }
 
-                    try {
-                        const fileName = image.imageLoc;
-                        image.imageTime = (new Date).getTime();
-                        image.imageLoc = imageLoc;
-                        this.dbConnection.getConnection().query('INSERT INTO images values (?,?,?,?,?)',
-                            [image.userId, image.imageId, image.imageLoc, image.tag, image.imageTime],
-                            (error, data) => {
-                                if (error) {
-                                    console.log("Query failed: ", error);
-                                    observer.error('Query failed: ' + error.message);
-                                    return;
-                                }
+                        console.log('User ', image.userId, ' created image: ', image.imageId);
 
-                                console.log('User ', image.userId, ' created image: ', image.imageId);
-                                observer.next(imageId);
-                                observer.complete();
-                            });
-                        fs.unlink(fileName, (err) => {
-                            if (err) {
-                                console.warn('Local file deletion failed: ', err);
-                            }
-                        });
-                    } catch (error) {
-                        observer.error(error);
-                    }
+                        // Start a background task to upload the image to the cloud
+                        this.uploadToCloud(image.userId, image.imageLoc, imageId);
 
-                })
-                .catch(error => {
-                    console.error('Failed to upload the file : ', error);
-                    observer.error('Failed to upload file: ' + error);
-                });
+                        observer.next(imageId);
+                        observer.complete();
+                    });
+            } catch (error) {
+                observer.error(error);
+            }
 
         });
+    }
+
+    private async uploadToCloud(userId: string, filename: string, imageId: string): Promise<ImageUploadResponse> {
+        return new Promise<ImageUploadResponse>((resolve, reject) => {
+            console.log('Starting background task to upload image to cloud');
+
+            const req = request.post('http://' + this.remoteServerConfig.host
+                + ':' + this.remoteServerConfig.port + '/users/' + userId + '/images/' + imageId, (err, res, body) => {
+                    if (err || res.statusCode !== 201) {
+                        console.error('Failed to upload file to cloud: ', err);
+                        reject(err);
+                    } else {
+                        console.log('Successfully uploaded image to cloud storage');
+                        resolve(body);
+                    }
+                });
+            req.form().append('imageFile', fs.createReadStream(filename));
+        });
+
     }
 
     public deleteImage(userId: string, imageId: string): Observable<string> {
@@ -404,7 +413,7 @@ export class ImageManager {
                     return tmpImg.imageId === imageId;
                 });
 
-                if(isShared.length === 0) {
+                if (isShared.length === 0) {
                     observer.error('The image is not shared between the users');
                     return;
                 }
@@ -430,5 +439,5 @@ export class ImageManager {
     }
 
     private dbConnection: DbConnection;
-    private awsInstance: AWS;
+    private remoteServerConfig: ServerConfig;
 }
