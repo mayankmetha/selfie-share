@@ -69,6 +69,9 @@ Setup the DB schema by running all commands in dbcommands.txt <br>
 # Building the container image
 Build the docker image: Navigate to the source code location, and run `sudo docker build -t fsc/selfie-share-webrole .`<br>
 
+# Start all containers <br>
+Run `docker-compose up` (Install docker-compose first from the docker website)<br>
+
 # NOTE: Port can be changed as needed, as can the names given to the network and the container <br>
 
 Start the docker container: <br>
