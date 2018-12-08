@@ -29,6 +29,10 @@ services:
     container_name: mysql
     networks:
       - custom
+    volumes:
+      - my-datavolume:/var/lib/mysql
+volumes:
+  my-datavolume:
 
 networks:
   custom:
