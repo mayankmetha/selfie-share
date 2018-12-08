@@ -66,13 +66,28 @@ Run the following commands: <br>
 `FLUSH PRIVILEGES;` <br>
 Setup the DB schema by running all commands in dbcommands.txt <br>
 
+#The worker role needs internet access to upload images to S3 <br>
+#Enable it by creating a file /etc/docker/daemon.json on your host, and add the following entry:
+<br>
+<code>
+{
+	"dns":
+	[
+	       	"8.8.8.8"
+	]
+}
+</code>
+
+
 # Building the container image
 Build the docker image: Navigate to the web-role, and run `sudo docker build -t fsc/selfie-share-webrole .`<br>
 
 Build the docker image: Navigate to worker-role, and run `sudo docker build -t fsc/selfie-share-webrole .`<br>
 
 # Start all containers <br>
-From the root folder of the project, Run `docker-compose up` (Install docker-compose first from the docker website)<br>
+From the root folder of the project, Run `docker-compose up -d` (Install docker-compose first from the docker website)<br>
+
+To Stop containers: `docker-compose down`
 
 <br>
 ############ FOR REFERENCE ONLY  Section below won't be needed for now, at least ################## <br>

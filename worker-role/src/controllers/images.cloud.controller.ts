@@ -11,7 +11,7 @@ export class ImageUploadController extends Controller {
     @Response('500', 'If the image Location requested already exists')
     @Response('400', 'If any required fields are missing in the request')
     @SuccessResponse('201', 'Created')
-    @Put('{userId}/images/{imageId}')
+    @Post('{userId}/images/{imageId}')
     public async uploadImage(@Request() request: express.Request, userId: string, imageId: string): Promise<ImageUploadResponse> {
         return new Promise<ImageUploadResponse>(async (resolve, reject) => {
             try {
