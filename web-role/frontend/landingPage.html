@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    * {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Float four columns side by side */
+.column {
+  float: left;
+  width: 25%;
+  padding: 0 10px;
+}
+
+/* Remove extra left and right margins, due to padding */
+.row {margin: 0 -5px;}
+
+/* Clear floats after the columns */
+.row:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+/* Responsive columns */
+@media screen and (max-width: 600px) {
+  .column {
+    width: 100%;
+    display: block;
+    margin-bottom: 20px;
+  }
+}
+
+/* Style the counter cards */
+.card {
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+  padding: 16px;
+  text-align: center;
+  background-color: #f1f1f1;
+}
+</style>
+  <script src="jquery.min.js"></script>
+  <script type="text/javascript">
+    $(document).ready(function () {
+      var username = localStorage.getItem("username");
+      $.ajax({
+        type: "GET",
+        dataType: "json",
+        url: "users/" + username,
+        success: function (data) {
+          console.log(data);
+          $("#username").html("<strong>Username:</strong> " + data.displayName);
+          $("#email").html("<strong>Email: </strong>" + data.email);
+        },
+        error: function (err) {
+          alert(err.responseJSON.error);
+        }
+      });
+
+      $.ajax({
+        type: "GET",
+        dataType: "json",
+        url: "users/" + username + "/notifications",
+        success: function (data) {
+          if (!data || data.length == 0) {
+            $("#notifications").html("<p>None</p>");
+          } else {
+            var result = '';
+            $.each(data, function (index, notification) {
+              console.log(notification.notificationText);
+              result += "<div>Notification " + (index + 1) + ": " + notification.notificationText + "</div>";
+            });
+            $("#notifications").html(result);
+          }
+        }
+      });
+      $.ajax({
+        type: "GET",
+        dataType: "json",
+        url: "users/" + username + "/friends",
+        success: function (data) {
+          if (!data || data.length == 0) {
+            $("#card").html("<p>None</p>");
+          } else {
+            var result = '';
+            $.each(data, function (index, friend) {
+              friendId = (friend.peer1 == username) ? friend.peer2 : friend.peer1;
+              result += "<div>Friend " + (index + 1) + " Name: " + friendId + "</div>";
+            });
+            $("#card").html(result);
+          }
+        }
+      });
+    });
+
+    $(document).on('submit', '#imageupload', function (e) {
+      e.preventDefault();
+      var username = localStorage.getItem("username");
+      var form_data = new FormData();
+      form_data.append('imageFile', ($("#fileupload"))[0].files[0]);
+
+      $.ajax({
+        type: 'POST',
+        url: '/users/' + username + '/images',
+        data: form_data,
+        processData: false,
+        contentType: false,
+        success: function () {
+          console.log("Success");
+        },
+        error: function () {
+          alert("File upload failed");
+        }
+      });
+    });
+  </script>
+</head>
+
+<body>
+  <div id="user">
+    <h3>User Details</h3>
+    <p id="username"></p>
+    <p id="email"></p>
+  </div>
+  <h3>Friends of user</h3>
+  <div class="row" id="card"></div>
+  <h3>Notifications for user</h3>
+  <div class="row" id="notifications"></div>
+  <form id="imageupload" enctype="multipart/form-data">
+    <input type="file" name="fileupload" value="fileupload" id="fileupload">
+    <label for="fileupload">Select a image to upload</label>
+    <input type="submit" value="submit">
+  </form>
+</body>
+
+</html>

@@ -20,7 +20,6 @@ const port: number = (process.env.PORT) ? Number(process.env.PORT) : 3001;
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-
 RegisterRoutes(app);
 
 app.use('/', swaggerUI.serve, swaggerUI.setup(swaggerJSON));

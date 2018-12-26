@@ -1,7 +1,7 @@
 // Import everything from express and assign it to the express variable
 import * as express from 'express';
 import * as bodyParser from 'body-parser';
-
+import { readFile } from 'fs'
 import { UserController, ImageController, FriendsController } from './controllers'
 
 // Import WelcomeController from controllers entry point
@@ -26,7 +26,23 @@ app.use(bodyParser.urlencoded({ extended: true }));
 //app.use('/welcome', WelcomeController);
 //app.use(methodOverride());
 RegisterRoutes(app);
+app.use('/jquery.min.js', function(req, res) {
+    readFile(__dirname + '/../frontend/jquery.min.js', 'utf8', function(err, text){
+                res.send(text);
+            });
+});
 
+app.use('/ui', function(req, res) {
+    readFile(__dirname + '/../frontend/login.html', 'utf8', function(err, text){
+                res.send(text);
+            });
+});
+
+app.use('/landing', function(req, res) {
+    readFile(__dirname + '/../frontend/landingPage.html', 'utf8', function(err, text){
+                res.send(text);
+            });
+});
 app.use('/', swaggerUI.serve, swaggerUI.setup(swaggerJSON));
 
 // Serve the application at the given port
